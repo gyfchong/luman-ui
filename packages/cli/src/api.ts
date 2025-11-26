@@ -466,6 +466,29 @@ export async function getPattern(
 // Re-export utility functions
 export { getConfig, writeConfig, configExists, detectProjectInfo }
 
+/**
+ * Phase 4: Backend Communication APIs
+ */
+export {
+  saveAuth,
+  loadAuth,
+  removeAuth,
+  isAuthenticated,
+  getAuthToken,
+  getApiUrl,
+  type AuthConfig,
+} from './utils/auth.js'
+
+export {
+  apiRequest,
+  loginApi,
+  logoutApi,
+  getCurrentUser,
+  checkBackendHealth,
+  type ApiError,
+  type ApiResponse,
+} from './utils/api.js'
+
 async function readFile(filePath: string): Promise<string> {
   const fs = await import('fs-extra')
   return fs.readFile(filePath, 'utf-8')
