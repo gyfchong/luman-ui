@@ -11,10 +11,8 @@ import {
 import { listComponents, listComponentsMetadata } from './tools/list-components.js';
 import { getComponentDetails, getComponentDetailsMetadata } from './tools/get-component-details.js';
 import { addComponent, addComponentMetadata } from './tools/add-component.js';
-import { scaffoldFeature, scaffoldFeatureMetadata } from './tools/scaffold-feature.js';
-import { scaffoldPage, scaffoldPageMetadata } from './tools/scaffold-page.js';
 import { previewComposition, previewCompositionMetadata } from './tools/preview-composition.js';
-import { getTemplates, getTemplatesMetadata } from './tools/get-templates.js';
+import { getPattern, getPatternMetadata } from './tools/get-pattern.js';
 import { analyzeProject, analyzeProjectMetadata } from './tools/analyze-project.js';
 
 // Create server instance
@@ -61,24 +59,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: scaffoldFeatureMetadata.name,
-        description: scaffoldFeatureMetadata.description,
-        inputSchema: {
-          type: 'object',
-          properties: scaffoldFeatureMetadata.inputSchema.shape,
-          required: ['name', 'template'],
-        },
-      },
-      {
-        name: scaffoldPageMetadata.name,
-        description: scaffoldPageMetadata.description,
-        inputSchema: {
-          type: 'object',
-          properties: scaffoldPageMetadata.inputSchema.shape,
-          required: ['name', 'path', 'components'],
-        },
-      },
-      {
         name: previewCompositionMetadata.name,
         description: previewCompositionMetadata.description,
         inputSchema: {
@@ -88,11 +68,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: getTemplatesMetadata.name,
-        description: getTemplatesMetadata.description,
+        name: getPatternMetadata.name,
+        description: getPatternMetadata.description,
         inputSchema: {
           type: 'object',
-          properties: {},
+          properties: getPatternMetadata.inputSchema.shape,
+          required: ['patternName'],
         },
       },
       {
@@ -124,17 +105,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'add_component':
         result = await addComponent(args as any);
         break;
-      case 'scaffold_feature':
-        result = await scaffoldFeature(args as any);
-        break;
-      case 'scaffold_page':
-        result = await scaffoldPage(args as any);
-        break;
       case 'preview_composition':
         result = await previewComposition(args as any);
         break;
-      case 'get_templates':
-        result = await getTemplates(args as any);
+      case 'get_pattern':
+        result = await getPattern(args as any);
         break;
       case 'analyze_project':
         result = await analyzeProject(args as any);

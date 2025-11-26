@@ -1,5 +1,4 @@
-import path from 'path'
-import type { Config, RegistryItem } from './types'
+import type { RegistryItem } from './types'
 import {
   getConfig,
   writeConfig,
@@ -244,25 +243,6 @@ export async function updateTokens(
  * Phase 2: Composition & Generation APIs
  */
 
-export interface Template {
-  name: string
-  type: 'feature' | 'page' | 'component'
-  description?: string
-  components: string[]
-}
-
-export interface ScaffoldFeatureResult {
-  success: boolean
-  files: string[]
-  components: string[]
-}
-
-export interface ScaffoldPageResult {
-  success: boolean
-  file: string
-  components: string[]
-}
-
 export interface CompositionPreview {
   components: string[]
   files: Array<{ path: string; type: string }>
@@ -275,87 +255,38 @@ export interface ProjectAnalysis {
   hasConfig: boolean
 }
 
-/**
- * Get list of available templates
- */
-export async function getTemplates(): Promise<Template[]> {
-  return [
-    {
-      name: 'crud-feature',
-      type: 'feature',
-      description: 'CRUD feature with list, create, edit pages',
-      components: ['button', 'form', 'table', 'dialog', 'input'],
-    },
-    {
-      name: 'auth-feature',
-      type: 'feature',
-      description: 'Authentication with login, signup, password reset',
-      components: ['button', 'form', 'input', 'card'],
-    },
-    {
-      name: 'dashboard-page',
-      type: 'page',
-      description: 'Dashboard page with charts and metrics',
-      components: ['card', 'chart', 'stat-card'],
-    },
-  ]
+export interface CodeExample {
+  language: string
+  code: string
+}
+
+export interface PatternPrinciple {
+  title: string
+  description: string
+  codeExamples: CodeExample[]
+}
+
+export interface Pattern {
+  name: string
+  category: 'accessibility' | 'composition'
+  relatedComponents: string[]
+  overview: string
+  principles: PatternPrinciple[]
+  completeExample?: CodeExample
+  testingChecklist: string[]
+  wcagCompliance: string[]
+}
+
+export interface GetPatternResult {
+  pattern: Pattern
 }
 
 /**
- * Scaffold a complete feature
- */
-export async function scaffoldFeature(
-  name: string,
-  templateName: string,
-  options?: { cwd?: string; installComponents?: boolean }
-): Promise<ScaffoldFeatureResult> {
-  const templates = await getTemplates()
-  const template = templates.find((t) => t.name === templateName)
-
-  if (!template) {
-    throw new Error(`Template "${templateName}" not found`)
-  }
-
-  const cwd = options?.cwd || process.cwd()
-  const files: string[] = []
-
-  // In a full implementation, this would generate files based on the template
-  // For now, this is a placeholder that demonstrates the API structure
-
-  return {
-    success: true,
-    files,
-    components: template.components,
-  }
-}
-
-/**
- * Scaffold a page
- */
-export async function scaffoldPage(
-  name: string,
-  path: string,
-  components: string[],
-  options?: { layout?: string; cwd?: string; installComponents?: boolean }
-): Promise<ScaffoldPageResult> {
-  const cwd = options?.cwd || process.cwd()
-
-  // In a full implementation, this would generate the page file
-  // For now, this is a placeholder
-
-  return {
-    success: true,
-    file: `${cwd}/pages/${name}.tsx`,
-    components,
-  }
-}
-
-/**
- * Preview a composition
+ * Preview a composition without installing
+ * Shows what components, files, and dependencies will be added
  */
 export async function previewComposition(
-  componentNames: string[],
-  options?: { cwd?: string }
+  componentNames: string[]
 ): Promise<CompositionPreview> {
   const components = componentNames
   const files: Array<{ path: string; type: string }> = []
@@ -380,7 +311,8 @@ export async function previewComposition(
 }
 
 /**
- * Analyze project
+ * Analyze project to detect framework and package manager
+ * Used during initialization
  */
 export async function analyzeProject(cwd?: string): Promise<ProjectAnalysis> {
   const projectInfo = await detectProjectInfo(cwd)
@@ -391,6 +323,144 @@ export async function analyzeProject(cwd?: string): Promise<ProjectAnalysis> {
     packageManager: projectInfo.packageManager || 'npm',
     hasConfig,
   }
+}
+
+/**
+ * Parse markdown pattern into structured data
+ */
+function parsePattern(content: string, patternName: string, category: 'accessibility' | 'composition'): Pattern {
+  // Extract components from frontmatter-like syntax
+  const relatedComponents: string[] = []
+  const componentMatches = content.match(/components?:\s*\[(.*?)\]/i)
+  if (componentMatches && componentMatches[1]) {
+    relatedComponents.push(
+      ...componentMatches[1].split(',').map(c => c.trim().replace(/['"]/g, ''))
+    )
+  }
+
+  // Extract overview (text between ## Overview and next ##)
+  const overviewMatch = content.match(/## Overview\s+(.*?)(?=\n##|\n```|$)/s)
+  const overview = overviewMatch?.[1]?.trim() || ''
+
+  // Extract principles (### sections under ## Core Principles)
+  const principles: PatternPrinciple[] = []
+  const principlesSection = content.match(/## Core Principles(.*?)(?=\n## (?!.*###)|$)/s)
+
+  if (principlesSection?.[1]) {
+    const principleMatches = principlesSection[1].matchAll(/### (\d+\.\s+.*?)\n(.*?)(?=\n###|\n##|$)/gs)
+
+    for (const match of principleMatches) {
+      const title = match[1]?.trim()
+      const body = match[2]
+
+      if (!title || !body) continue
+
+      // Extract description (non-code text)
+      const description = body
+        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+        .replace(/\*\*/g, '') // Remove bold
+        .replace(/\n\n+/g, '\n') // Collapse multiple newlines
+        .trim()
+
+      // Extract code examples
+      const codeExamples: CodeExample[] = []
+      const codeMatches = body.matchAll(/```(\w+)?\n([\s\S]*?)```/g)
+
+      for (const codeMatch of codeMatches) {
+        const code = codeMatch[2]?.trim()
+        if (code) {
+          codeExamples.push({
+            language: codeMatch[1] || 'typescript',
+            code
+          })
+        }
+      }
+
+      principles.push({ title, description, codeExamples })
+    }
+  }
+
+  // Extract complete example (## Complete ... Example section)
+  let completeExample: CodeExample | undefined
+  const exampleMatch = content.match(/## Complete.*Example\s+```(\w+)?\n([\s\S]*?)```/)
+  if (exampleMatch?.[2]) {
+    completeExample = {
+      language: exampleMatch[1] || 'typescript',
+      code: exampleMatch[2].trim()
+    }
+  }
+
+  // Extract testing checklist
+  const testingChecklist: string[] = []
+  const checklistMatch = content.match(/## Testing Checklist\s+([\s\S]*?)(?=\n##|$)/)
+  if (checklistMatch?.[1]) {
+    const items = checklistMatch[1].match(/- \[.\] (.*)/g)
+    if (items) {
+      testingChecklist.push(...items.map(item => item.replace(/- \[.\] /, '').trim()))
+    }
+  }
+
+  // Extract WCAG compliance
+  const wcagCompliance: string[] = []
+  const wcagMatch = content.match(/## WCAG.*\s+([\s\S]*?)(?=\n##|$)/)
+  if (wcagMatch?.[1]) {
+    const items = wcagMatch[1].match(/- \*\*([\d.]+.*?)\*\*/g)
+    if (items) {
+      wcagCompliance.push(...items.map(item => item.replace(/- \*\*|\*\*/g, '').trim()))
+    }
+  }
+
+  return {
+    name: patternName,
+    category,
+    relatedComponents,
+    overview,
+    principles,
+    completeExample,
+    testingChecklist,
+    wcagCompliance,
+  }
+}
+
+/**
+ * Get pattern documentation for LLM guidance
+ * Returns our recommended patterns for accessibility and composition as structured data
+ */
+export async function getPattern(
+  patternName: string
+): Promise<GetPatternResult> {
+  const fs = await import('fs-extra')
+  const { fileURLToPath } = await import('url')
+  const { dirname, join } = await import('path')
+
+  // Get the package root directory
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = dirname(__filename)
+  const packageRoot = join(__dirname, '..')
+  const patternsDir = join(packageRoot, 'patterns')
+
+  // Map pattern name to file path
+  const patternPaths: Record<string, { file: string; category: 'accessibility' | 'composition' }> = {
+    'form-accessibility': { file: 'accessibility/form-accessibility.md', category: 'accessibility' },
+    'form-composition': { file: 'composition/form-composition.md', category: 'composition' },
+  }
+
+  const patternInfo = patternPaths[patternName]
+  if (!patternInfo) {
+    throw new Error(`Pattern "${patternName}" not found. Available patterns: ${Object.keys(patternPaths).join(', ')}`)
+  }
+
+  const patternPath = join(patternsDir, patternInfo.file)
+  const exists = await fs.pathExists(patternPath)
+
+  if (!exists) {
+    throw new Error(`Pattern file not found: ${patternPath}`)
+  }
+
+  const content = await fs.readFile(patternPath, 'utf-8')
+  const pattern = parsePattern(content, patternName, patternInfo.category)
+
+  return { pattern }
 }
 
 // Re-export utility functions
