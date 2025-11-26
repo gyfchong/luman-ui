@@ -1,82 +1,52 @@
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'pathe';
-import type { Config, Component } from '../types/index.js';
+import fs from 'fs-extra'
+import path from 'path'
+import type { Config } from '../types'
 
-/**
- * Ensure directory exists
- */
-export async function ensureDir(path: string): Promise<void> {
-  if (!existsSync(path)) {
-    await mkdir(path, { recursive: true });
+export async function ensureDir(dirPath: string): Promise<void> {
+  await fs.ensureDir(dirPath)
+}
+
+export async function writeFile(
+  filePath: string,
+  content: string
+): Promise<void> {
+  await ensureDir(path.dirname(filePath))
+  await fs.writeFile(filePath, content, 'utf-8')
+}
+
+export async function fileExists(filePath: string): Promise<boolean> {
+  return fs.pathExists(filePath)
+}
+
+export async function readFile(filePath: string): Promise<string> {
+  return fs.readFile(filePath, 'utf-8')
+}
+
+export async function deleteFile(filePath: string): Promise<void> {
+  if (await fileExists(filePath)) {
+    await fs.remove(filePath)
   }
 }
 
-/**
- * Write file and ensure directory exists
- */
-export async function writeFileSafe(path: string, content: string): Promise<void> {
-  await ensureDir(dirname(path));
-  await writeFile(path, content, 'utf-8');
-}
-
-/**
- * Resolve component path based on config
- */
 export function resolveComponentPath(
-  component: Component,
-  file: { path: string; type: string },
   config: Config,
-  cwd: string = process.cwd()
+  type: string,
+  fileName: string
 ): string {
-  // Determine base path based on file type
-  let basePath: string;
+  const baseAlias = config.aliases.components
 
-  switch (file.type) {
-    case 'registry:component':
-    case 'registry:ui':
-      basePath = config.aliases.ui || config.aliases.components;
-      break;
-    case 'registry:lib':
-      basePath = config.aliases.lib || config.aliases.utils;
-      break;
-    case 'registry:hook':
-      basePath = config.aliases.hooks || config.aliases.lib || config.aliases.utils;
-      break;
-    default:
-      basePath = config.aliases.components;
+  let targetDir: string
+  if (type === 'registry:component' || type === 'registry:ui') {
+    targetDir = baseAlias
+  } else if (type === 'registry:lib') {
+    targetDir = config.aliases.lib || config.aliases.utils
+  } else if (type === 'registry:hook') {
+    targetDir = config.aliases.hooks || baseAlias
+  } else {
+    targetDir = baseAlias
   }
 
-  // Remove alias prefix (e.g., '@/components' -> 'components')
-  const cleanBase = basePath.replace(/^@\//, '');
-
-  // Construct full path
-  return resolve(cwd, cleanBase, file.path);
-}
-
-/**
- * Check if file exists and read its content
- */
-export async function readFileIfExists(path: string): Promise<string | null> {
-  if (!existsSync(path)) {
-    return null;
-  }
-
-  try {
-    return await readFile(path, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Create backup of existing file
- */
-export async function backupFile(path: string): Promise<void> {
-  const content = await readFileIfExists(path);
-
-  if (content) {
-    const backupPath = `${path}.backup`;
-    await writeFile(backupPath, content, 'utf-8');
-  }
+  // Remove alias prefix and resolve to actual path
+  const cleanPath = targetDir.replace(/^[@~]\//, '')
+  return path.join(process.cwd(), cleanPath, fileName)
 }

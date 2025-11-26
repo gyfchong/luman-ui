@@ -11,13 +11,16 @@ export const scaffoldPageSchema = z.object({
 });
 
 export async function scaffoldPage(args: z.infer<typeof scaffoldPageSchema>) {
-  const result = await api.scaffoldPage(args.name, args.path, args.components, {
-    layout: args.layout,
-    cwd: args.cwd,
-    installComponents: args.installComponents,
-  });
-
-  return result;
+  try {
+    const result = await api.scaffoldPage(args.name, args.path, args.components, {
+      layout: args.layout,
+      cwd: args.cwd,
+      installComponents: args.installComponents,
+    });
+    return result;
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export const scaffoldPageMetadata = {

@@ -9,12 +9,15 @@ export const scaffoldFeatureSchema = z.object({
 });
 
 export async function scaffoldFeature(args: z.infer<typeof scaffoldFeatureSchema>) {
-  const result = await api.scaffoldFeature(args.name, args.template, {
-    cwd: args.cwd,
-    installComponents: args.installComponents,
-  });
-
-  return result;
+  try {
+    const result = await api.scaffoldFeature(args.name, args.template, {
+      cwd: args.cwd,
+      installComponents: args.installComponents,
+    });
+    return result;
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export const scaffoldFeatureMetadata = {

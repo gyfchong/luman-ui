@@ -1,141 +1,151 @@
-import { defineCommand } from 'citty';
-import { consola } from 'consola';
-import * as p from '@clack/prompts';
-import pc from 'picocolors';
-import { readConfig } from '../utils/config.js';
-import { fetchComponent, resolveComponentDependencies, fetchComponentSource } from '../utils/registry.js';
-import { resolveComponentPath, writeFileSafe } from '../utils/fs.js';
-import { installDependencies } from '../utils/install.js';
+/**
+ * Add Command
+ *
+ * Adds components from the registry to your project. Supports adding single components,
+ * multiple components, or all components at once.
+ *
+ * @example
+ * # Interactive mode - shows menu to select components
+ * luman add
+ *
+ * @example
+ * # Add a specific component
+ * luman add button
+ *
+ * @example
+ * # Add multiple components
+ * luman add button card dialog
+ *
+ * @example
+ * # Add all components
+ * luman add all
+ * luman add --all
+ *
+ * @example
+ * # The interactive menu includes:
+ * # - "All components (N)" option at the top
+ * # - Individual component list below
+ */
+
+import { defineCommand } from "citty";
+import { addComponent } from "../api";
+import colors from "picocolors";
+import * as p from "@clack/prompts";
 
 export default defineCommand({
   meta: {
-    name: 'add',
-    description: 'Add a component to your project',
+    name: "add",
+    description: "Add a component to your project",
   },
   args: {
     components: {
-      type: 'positional',
-      description: 'Component name(s) to add',
+      type: "positional",
+      description: "Component name(s) to add (use 'all' to install all components)",
       required: false,
     },
-    yes: {
-      type: 'boolean',
-      description: 'Skip confirmation prompts',
-      alias: 'y',
-    },
-    overwrite: {
-      type: 'boolean',
-      description: 'Overwrite existing files',
-      alias: 'o',
+    all: {
+      type: "boolean",
+      description: "Install all components",
+      default: false,
     },
   },
-  async run({ args }) {
-    const config = await readConfig();
-
-    if (!config) {
-      p.cancel('components.json not found. Run `luman init` first.');
-      process.exit(1);
-    }
-
-    p.intro(pc.bgCyan(pc.black(' luman-ui ')));
-
-    const componentNames = args.components ? [args.components] : [];
-
-    // If no components specified, prompt user
-    if (componentNames.length === 0) {
-      const input = await p.text({
-        message: 'Which component(s) would you like to add?',
-        placeholder: 'button, card, dialog',
-      });
-
-      if (p.isCancel(input)) {
-        p.cancel('Operation cancelled');
-        process.exit(0);
-      }
-
-      componentNames.push(...(input as string).split(',').map(s => s.trim()));
-    }
-
-    const spinner = p.spinner();
-    spinner.start('Resolving dependencies...');
-
+  async run({ args, rawArgs }) {
     try {
-      // Resolve all dependencies
-      const allComponents = [];
-      for (const name of componentNames) {
-        const resolved = await resolveComponentDependencies(name, config.registry);
-        allComponents.push(...resolved);
-      }
+      const { listComponents } = await import("../api");
+      const { components } = await listComponents();
 
-      // Remove duplicates
-      const uniqueComponents = Array.from(
-        new Map(allComponents.map(c => [c.name, c])).values()
-      );
+      let componentsToInstall: string[] = [];
 
-      spinner.stop('Dependencies resolved');
+      // Get all positional arguments (component names)
+      const componentArgs = rawArgs.filter((arg) => !arg.startsWith("-"));
 
-      // Show what will be installed
-      consola.log('');
-      consola.log(pc.bold('The following components will be installed:'));
-      for (const component of uniqueComponents) {
-        consola.log(`  ${pc.green('+')} ${component.name}`);
-      }
+      // Check if --all flag is used or "all" is in arguments
+      if (args.all || componentArgs.includes("all")) {
+        componentsToInstall = components;
+      } else if (componentArgs.length > 0) {
+        componentsToInstall = componentArgs;
+      } else {
+        // Interactive mode
+        p.intro(colors.bold("Add Component"));
 
-      // Collect all npm dependencies
-      const npmDeps = new Set<string>();
-      for (const component of uniqueComponents) {
-        component.dependencies?.forEach(dep => npmDeps.add(dep));
-      }
+        const selection = (await p.select({
+          message: "Which component would you like to add?",
+          options: [
+            { value: "__all__", label: colors.cyan("All components") + colors.dim(` (${components.length})`) },
+            ...components.map((c) => ({ value: c, label: c })),
+          ],
+        })) as string;
 
-      if (npmDeps.size > 0) {
-        consola.log('');
-        consola.log(pc.bold('npm dependencies:'));
-        for (const dep of npmDeps) {
-          consola.log(`  ${pc.blue('+')} ${dep}`);
-        }
-      }
-
-      // Confirm installation
-      if (!args.yes) {
-        const confirm = await p.confirm({
-          message: 'Continue with installation?',
-          initialValue: true,
-        });
-
-        if (p.isCancel(confirm) || !confirm) {
-          p.cancel('Installation cancelled');
+        if (p.isCancel(selection)) {
+          p.cancel("Operation cancelled");
           process.exit(0);
         }
-      }
 
-      spinner.start('Installing components...');
-
-      // Install each component
-      for (const component of uniqueComponents) {
-        const sources = await fetchComponentSource(component, config.registry);
-
-        for (const file of component.files) {
-          const content = sources.get(file.path);
-          if (!content) continue;
-
-          const targetPath = resolveComponentPath(component, file, config);
-          await writeFileSafe(targetPath, content);
+        if (selection === "__all__") {
+          componentsToInstall = components;
+        } else {
+          componentsToInstall = [selection];
         }
       }
 
-      spinner.stop('Components installed');
-
-      // Install npm dependencies
-      if (npmDeps.size > 0) {
-        spinner.start('Installing npm dependencies...');
-        await installDependencies(Array.from(npmDeps));
-        spinner.stop('Dependencies installed');
+      if (componentsToInstall.length === 0) {
+        console.log(colors.yellow("No components to install"));
+        return;
       }
 
-      p.outro(pc.green('✓ Installation complete!'));
+      const spinner = p.spinner();
+      const isMultiple = componentsToInstall.length > 1;
+      spinner.start(
+        isMultiple
+          ? `Installing ${componentsToInstall.length} component${componentsToInstall.length === 1 ? "" : "s"}`
+          : `Installing ${componentsToInstall[0]}`
+      );
+
+      const allInstalled: string[] = [];
+      const allFilesWritten: string[] = [];
+      const failed: string[] = [];
+
+      for (const componentName of componentsToInstall) {
+        try {
+          const result = await addComponent(componentName);
+          allInstalled.push(...result.installed);
+          allFilesWritten.push(...result.filesWritten);
+        } catch (error) {
+          failed.push(componentName);
+          console.error(colors.dim(`\n  Failed to install ${componentName}: ${error instanceof Error ? error.message : error}`));
+        }
+      }
+
+      if (allInstalled.length > 0) {
+        spinner.stop(
+          isMultiple
+            ? `${colors.green("✓")} Successfully installed ${allInstalled.length} component${allInstalled.length === 1 ? "" : "s"}`
+            : `${colors.green("✓")} Successfully installed ${componentsToInstall[0]}`
+        );
+
+        console.log(`\n${colors.bold("Installed components:")}`);
+        for (const comp of allInstalled) {
+          console.log(`  ${colors.cyan("•")} ${comp}`);
+        }
+
+        console.log(`\n${colors.bold("Files written:")}`);
+        for (const file of allFilesWritten) {
+          console.log(`  ${colors.dim(file)}`);
+        }
+      } else {
+        spinner.stop(colors.red("No components were installed"));
+      }
+
+      if (failed.length > 0) {
+        console.log(colors.yellow(`\n⚠ ${failed.length} component${failed.length === 1 ? "" : "s"} failed to install: ${failed.join(", ")}`));
+      }
+
+      console.log();
     } catch (error) {
-      spinner.stop('Installation failed');
-      p.cancel(error instanceof Error ? error.message : 'Unknown error occurred');
+      console.error(
+        colors.red("Error:"),
+        error instanceof Error ? error.message : error
+      );
       process.exit(1);
     }
   },

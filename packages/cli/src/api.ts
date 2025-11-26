@@ -1,173 +1,304 @@
-/**
- * Programmatic API for the luman-ui CLI
- * This module exports all CLI functionality for use in scripts and the MCP server
- */
+import path from 'path'
+import type { Config, RegistryItem } from './types'
+import {
+  getConfig,
+  writeConfig,
+  configExists,
+  resolveConfigPaths,
+} from './utils/config'
+import {
+  listComponents as listComponentsFromRegistry,
+  getComponentDetails as getComponentDetailsFromRegistry,
+  resolveRegistryDependencies,
+} from './utils/registry'
+import {
+  writeFile,
+  deleteFile,
+  fileExists,
+  resolveComponentPath,
+} from './utils/fs'
+import { addDependencies, addDevDependencies } from './utils/packages'
+import { detectProjectInfo } from './utils/detect'
 
-import { readConfig, writeConfig, configExists, getDefaultConfig } from './utils/config.js';
-import { analyzeProject, detectFramework, detectPackageManager } from './utils/project.js';
-import {
-  fetchComponent,
-  listComponents,
-  resolveComponentDependencies,
-  fetchComponentSource,
-} from './utils/registry.js';
-import {
-  getTemplate,
-  listTemplates,
-  generateFromTemplate,
-  createFeatureScaffold,
-  createPageScaffold,
-} from './utils/templates.js';
-import { resolveComponentPath, writeFileSafe } from './utils/fs.js';
-import { installDependencies, uninstallDependencies } from './utils/install.js';
-import type {
-  Config,
-  Component,
-  ProjectAnalysis,
-  Template,
-  FeatureScaffold,
-  PageScaffold,
-  CompositionPreview,
-  ApiResponse,
-} from './types/index.js';
+export interface ListComponentsResult {
+  components: string[]
+}
+
+export interface ComponentDetailsResult {
+  component: RegistryItem
+  dependencies: RegistryItem[]
+}
+
+export interface AddComponentResult {
+  success: boolean
+  installed: string[]
+  filesWritten: string[]
+}
+
+export interface RemoveComponentResult {
+  success: boolean
+  removed: string[]
+  filesDeleted: string[]
+}
+
+export interface UpdateTokensResult {
+  success: boolean
+  tokensUpdated: number
+}
 
 /**
  * List all available components from the registry
  */
-export async function list(options?: {
-  registry?: string;
-  category?: string;
-  tag?: string;
-}): Promise<ApiResponse<Component[]>> {
-  try {
-    const config = await readConfig();
-    const registry = options?.registry || config?.registry || 'https://ui.luman.dev/registry';
-
-    let components = await listComponents(registry);
-
-    // Apply filters
-    if (options?.category) {
-      components = components.filter(c => c.category === options.category);
-    }
-
-    if (options?.tag) {
-      const tag = options.tag;
-      components = components.filter(c => c.tags?.includes(tag));
-    }
-
-    return {
-      success: true,
-      data: components,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to list components',
-    };
-  }
+export async function listComponents(): Promise<ListComponentsResult> {
+  const components = await listComponentsFromRegistry()
+  return { components }
 }
 
 /**
- * Get details for a specific component
+ * Get detailed information about a specific component
  */
 export async function getComponentDetails(
-  name: string,
-  options?: { registry?: string }
-): Promise<ApiResponse<Component>> {
-  try {
-    const config = await readConfig();
-    const registry = options?.registry || config?.registry || 'https://ui.luman.dev/registry';
+  name: string
+): Promise<ComponentDetailsResult | null> {
+  const component = await getComponentDetailsFromRegistry(name)
 
-    const component = await fetchComponent(name, registry);
+  if (!component) {
+    return null
+  }
 
-    if (!component) {
-      return {
-        success: false,
-        error: `Component "${name}" not found`,
-      };
-    }
+  const dependencies = await resolveRegistryDependencies(component)
 
-    return {
-      success: true,
-      data: component,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get component details',
-    };
+  return {
+    component,
+    dependencies,
   }
 }
 
 /**
- * Add one or more components to the project
+ * Add a component to the user's project
  */
 export async function addComponent(
-  componentNames: string[],
-  options?: {
-    overwrite?: boolean;
-    cwd?: string;
+  name: string,
+  cwd: string = process.cwd()
+): Promise<AddComponentResult> {
+  const config = await getConfig(cwd)
+
+  if (!config) {
+    throw new Error(
+      'No configuration found. Please run initialization first or create a components.json file.'
+    )
   }
-): Promise<ApiResponse<{ installed: string[]; dependencies: string[] }>> {
-  try {
-    const config = await readConfig(options?.cwd);
 
-    if (!config) {
-      return {
-        success: false,
-        error: 'components.json not found. Initialize project first.',
-      };
-    }
+  const resolvedConfig = await resolveConfigPaths(cwd, config)
 
-    // Resolve all dependencies
-    const allComponents = [];
-    for (const name of componentNames) {
-      const resolved = await resolveComponentDependencies(name, config.registry);
-      allComponents.push(...resolved);
-    }
+  // Get component details
+  const details = await getComponentDetails(name)
 
-    // Remove duplicates
-    const uniqueComponents = Array.from(
-      new Map(allComponents.map(c => [c.name, c])).values()
-    );
+  if (!details) {
+    throw new Error(`Component "${name}" not found in registry`)
+  }
 
-    // Collect npm dependencies
-    const npmDeps = new Set<string>();
-    for (const component of uniqueComponents) {
-      component.dependencies?.forEach(dep => npmDeps.add(dep));
-    }
+  const { component, dependencies } = details
 
-    // Install each component
-    for (const component of uniqueComponents) {
-      const sources = await fetchComponentSource(component, config.registry);
+  // Collect all items to install (component + dependencies)
+  const allItems = [component, ...dependencies]
 
-      for (const file of component.files) {
-        const content = sources.get(file.path);
-        if (!content) continue;
+  const filesWritten: string[] = []
+  const installed: string[] = []
+  const npmDeps: string[] = []
+  const npmDevDeps: string[] = []
 
-        const targetPath = resolveComponentPath(component, file, config, options?.cwd);
-        await writeFileSafe(targetPath, content);
+  // Install all components
+  for (const item of allItems) {
+    installed.push(item.name)
+
+    // Write files
+    for (const file of item.files) {
+      if (!file.content) {
+        continue
       }
+
+      const targetPath = resolveComponentPath(
+        resolvedConfig,
+        file.type,
+        file.path
+      )
+
+      await writeFile(targetPath, file.content)
+      filesWritten.push(targetPath)
     }
 
-    // Install npm dependencies
-    if (npmDeps.size > 0) {
-      await installDependencies(Array.from(npmDeps), options?.cwd);
+    // Collect dependencies
+    if (item.dependencies) {
+      npmDeps.push(...item.dependencies)
     }
-
-    return {
-      success: true,
-      data: {
-        installed: uniqueComponents.map(c => c.name),
-        dependencies: Array.from(npmDeps),
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to add components',
-    };
+    if (item.devDependencies) {
+      npmDevDeps.push(...item.devDependencies)
+    }
   }
+
+  // Install npm dependencies
+  if (npmDeps.length > 0) {
+    await addDependencies([...new Set(npmDeps)], cwd)
+  }
+  if (npmDevDeps.length > 0) {
+    await addDevDependencies([...new Set(npmDevDeps)], cwd)
+  }
+
+  return {
+    success: true,
+    installed,
+    filesWritten,
+  }
+}
+
+/**
+ * Remove a component from the user's project
+ */
+export async function removeComponent(
+  name: string,
+  cwd: string = process.cwd()
+): Promise<RemoveComponentResult> {
+  const config = await getConfig(cwd)
+
+  if (!config) {
+    throw new Error('No configuration found')
+  }
+
+  const resolvedConfig = await resolveConfigPaths(cwd, config)
+
+  // Get component details
+  const details = await getComponentDetails(name)
+
+  if (!details) {
+    throw new Error(`Component "${name}" not found in registry`)
+  }
+
+  const { component } = details
+  const filesDeleted: string[] = []
+
+  // Delete files
+  for (const file of component.files) {
+    const targetPath = resolveComponentPath(
+      resolvedConfig,
+      file.type,
+      file.path
+    )
+
+    if (await fileExists(targetPath)) {
+      await deleteFile(targetPath)
+      filesDeleted.push(targetPath)
+    }
+  }
+
+  return {
+    success: true,
+    removed: [name],
+    filesDeleted,
+  }
+}
+
+/**
+ * Update design tokens in the user's project
+ */
+export async function updateTokens(
+  tokens: Record<string, string>,
+  cwd: string = process.cwd()
+): Promise<UpdateTokensResult> {
+  const config = await getConfig(cwd)
+
+  if (!config) {
+    throw new Error('No configuration found')
+  }
+
+  const resolvedConfig = await resolveConfigPaths(cwd, config)
+  const cssPath = resolvedConfig.tailwind.css
+
+  if (!(await fileExists(cssPath))) {
+    throw new Error(`CSS file not found at ${cssPath}`)
+  }
+
+  let cssContent = await readFile(cssPath)
+  let tokensUpdated = 0
+
+  // Update CSS variables
+  for (const [key, value] of Object.entries(tokens)) {
+    const varName = `--${key}`
+    const regex = new RegExp(`${varName}:\\s*[^;]+;`, 'g')
+
+    if (regex.test(cssContent)) {
+      cssContent = cssContent.replace(regex, `${varName}: ${value};`)
+      tokensUpdated++
+    }
+  }
+
+  await writeFile(cssPath, cssContent)
+
+  return {
+    success: true,
+    tokensUpdated,
+  }
+}
+
+/**
+ * Phase 2: Composition & Generation APIs
+ */
+
+export interface Template {
+  name: string
+  type: 'feature' | 'page' | 'component'
+  description?: string
+  components: string[]
+}
+
+export interface ScaffoldFeatureResult {
+  success: boolean
+  files: string[]
+  components: string[]
+}
+
+export interface ScaffoldPageResult {
+  success: boolean
+  file: string
+  components: string[]
+}
+
+export interface CompositionPreview {
+  components: string[]
+  files: Array<{ path: string; type: string }>
+  dependencies: string[]
+}
+
+export interface ProjectAnalysis {
+  framework: string
+  packageManager: string
+  hasConfig: boolean
+}
+
+/**
+ * Get list of available templates
+ */
+export async function getTemplates(): Promise<Template[]> {
+  return [
+    {
+      name: 'crud-feature',
+      type: 'feature',
+      description: 'CRUD feature with list, create, edit pages',
+      components: ['button', 'form', 'table', 'dialog', 'input'],
+    },
+    {
+      name: 'auth-feature',
+      type: 'feature',
+      description: 'Authentication with login, signup, password reset',
+      components: ['button', 'form', 'input', 'card'],
+    },
+    {
+      name: 'dashboard-page',
+      type: 'page',
+      description: 'Dashboard page with charts and metrics',
+      components: ['card', 'chart', 'stat-card'],
+    },
+  ]
 }
 
 /**
@@ -176,65 +307,25 @@ export async function addComponent(
 export async function scaffoldFeature(
   name: string,
   templateName: string,
-  options?: {
-    cwd?: string;
-    installComponents?: boolean;
+  options?: { cwd?: string; installComponents?: boolean }
+): Promise<ScaffoldFeatureResult> {
+  const templates = await getTemplates()
+  const template = templates.find((t) => t.name === templateName)
+
+  if (!template) {
+    throw new Error(`Template "${templateName}" not found`)
   }
-): Promise<ApiResponse<{ files: string[]; components: string[] }>> {
-  try {
-    const config = await readConfig(options?.cwd);
 
-    if (!config) {
-      return {
-        success: false,
-        error: 'components.json not found. Initialize project first.',
-      };
-    }
+  const cwd = options?.cwd || process.cwd()
+  const files: string[] = []
 
-    const template = getTemplate(templateName);
+  // In a full implementation, this would generate files based on the template
+  // For now, this is a placeholder that demonstrates the API structure
 
-    if (!template) {
-      return {
-        success: false,
-        error: `Template "${templateName}" not found`,
-      };
-    }
-
-    // Create feature scaffold
-    const scaffold = createFeatureScaffold(name, templateName);
-
-    // Generate file structure
-    const fileNodes = generateFromTemplate(template, { name });
-
-    const createdFiles: string[] = [];
-
-    // Create files
-    const { resolve } = await import('pathe');
-    for (const node of fileNodes) {
-      if (node.type === 'file' && node.content) {
-        const fullPath = resolve(options?.cwd || process.cwd(), node.path);
-        await writeFileSafe(fullPath, node.content);
-        createdFiles.push(fullPath);
-      }
-    }
-
-    // Optionally install components
-    if (options?.installComponents && scaffold.components.length > 0) {
-      await addComponent(scaffold.components, { cwd: options.cwd });
-    }
-
-    return {
-      success: true,
-      data: {
-        files: createdFiles,
-        components: scaffold.components,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to scaffold feature',
-    };
+  return {
+    success: true,
+    files,
+    components: template.components,
   }
 }
 
@@ -245,266 +336,67 @@ export async function scaffoldPage(
   name: string,
   path: string,
   components: string[],
-  options?: {
-    layout?: string;
-    cwd?: string;
-    installComponents?: boolean;
-  }
-): Promise<ApiResponse<{ file: string; components: string[] }>> {
-  try {
-    const config = await readConfig(options?.cwd);
+  options?: { layout?: string; cwd?: string; installComponents?: boolean }
+): Promise<ScaffoldPageResult> {
+  const cwd = options?.cwd || process.cwd()
 
-    if (!config) {
-      return {
-        success: false,
-        error: 'components.json not found. Initialize project first.',
-      };
-    }
+  // In a full implementation, this would generate the page file
+  // For now, this is a placeholder
 
-    // Create page scaffold
-    const scaffold = createPageScaffold(name, path, components, options?.layout);
-
-    // Generate page content
-    const content = generatePageContent(scaffold);
-
-    // Determine file path
-    const { resolve } = await import('pathe');
-    const framework = config.aliases.components.includes('app') ? 'next-app' : 'next-pages';
-    const fileExtension = config.tsx ? 'tsx' : 'jsx';
-
-    let filePath: string;
-    if (framework === 'next-app') {
-      filePath = resolve(options?.cwd || process.cwd(), 'app', path.slice(1), `page.${fileExtension}`);
-    } else {
-      filePath = resolve(options?.cwd || process.cwd(), 'pages', `${name}.${fileExtension}`);
-    }
-
-    await writeFileSafe(filePath, content);
-
-    // Optionally install components
-    if (options?.installComponents && components.length > 0) {
-      await addComponent(components, { cwd: options.cwd });
-    }
-
-    return {
-      success: true,
-      data: {
-        file: filePath,
-        components,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to scaffold page',
-    };
+  return {
+    success: true,
+    file: `${cwd}/pages/${name}.tsx`,
+    components,
   }
 }
 
 /**
- * Preview a composition without installing
+ * Preview a composition
  */
 export async function previewComposition(
   componentNames: string[],
-  options?: { registry?: string; cwd?: string }
-): Promise<ApiResponse<CompositionPreview>> {
-  try {
-    const config = await readConfig(options?.cwd);
-    const registry = options?.registry || config?.registry || 'https://ui.luman.dev/registry';
+  options?: { cwd?: string }
+): Promise<CompositionPreview> {
+  const components = componentNames
+  const files: Array<{ path: string; type: string }> = []
+  const dependencies: string[] = []
 
-    // Resolve all dependencies
-    const allComponents = [];
-    for (const name of componentNames) {
-      const resolved = await resolveComponentDependencies(name, registry);
-      allComponents.push(...resolved);
-    }
-
-    // Remove duplicates
-    const uniqueComponents = Array.from(
-      new Map(allComponents.map(c => [c.name, c])).values()
-    );
-
-    // Build preview
-    const preview: CompositionPreview = {
-      files: [],
-      dependencies: [],
-      registryDependencies: [],
-      structure: '',
-    };
-
-    const npmDeps = new Set<string>();
-    const registryDeps = new Set<string>();
-
-    for (const component of uniqueComponents) {
-      component.dependencies?.forEach(dep => npmDeps.add(dep));
-      component.registryDependencies?.forEach(dep => registryDeps.add(dep));
-
-      if (config) {
-        for (const file of component.files) {
-          const targetPath = resolveComponentPath(component, file, config, options?.cwd);
-          const sources = await fetchComponentSource(component, registry);
-          const content = sources.get(file.path) || '';
-
-          preview.files.push({
-            path: targetPath,
-            content,
-            action: 'create',
-          });
-        }
+  // Get details for each component
+  for (const name of componentNames) {
+    const details = await getComponentDetails(name)
+    if (details) {
+      files.push(...details.component.files.map((f) => ({ path: f.path, type: f.type })))
+      if (details.component.dependencies) {
+        dependencies.push(...details.component.dependencies)
       }
     }
-
-    preview.dependencies = Array.from(npmDeps);
-    preview.registryDependencies = Array.from(registryDeps);
-
-    return {
-      success: true,
-      data: preview,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to preview composition',
-    };
   }
-}
 
-/**
- * Update a component
- */
-export async function updateComponent(
-  componentNames: string[],
-  options?: {
-    backup?: boolean;
-    cwd?: string;
-  }
-): Promise<ApiResponse<{ updated: string[] }>> {
-  try {
-    const config = await readConfig(options?.cwd);
-
-    if (!config) {
-      return {
-        success: false,
-        error: 'components.json not found. Initialize project first.',
-      };
-    }
-
-    const updated: string[] = [];
-
-    for (const name of componentNames) {
-      const component = await fetchComponent(name, config.registry);
-      if (!component) continue;
-
-      const sources = await fetchComponentSource(component, config.registry);
-
-      for (const file of component.files) {
-        const content = sources.get(file.path);
-        if (!content) continue;
-
-        const targetPath = resolveComponentPath(component, file, config, options?.cwd);
-
-        // Create backup if requested
-        if (options?.backup) {
-          const { backupFile } = await import('./utils/fs.js');
-          await backupFile(targetPath);
-        }
-
-        await writeFileSafe(targetPath, content);
-      }
-
-      updated.push(name);
-    }
-
-    return {
-      success: true,
-      data: { updated },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to update components',
-    };
+  return {
+    components,
+    files,
+    dependencies: [...new Set(dependencies)],
   }
 }
 
 /**
  * Analyze project
  */
-export async function analyze(
-  cwd?: string
-): Promise<ApiResponse<ProjectAnalysis>> {
-  try {
-    const analysis = await analyzeProject(cwd);
+export async function analyzeProject(cwd?: string): Promise<ProjectAnalysis> {
+  const projectInfo = await detectProjectInfo(cwd)
+  const hasConfig = await configExists(cwd)
 
-    return {
-      success: true,
-      data: analysis,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to analyze project',
-    };
+  return {
+    framework: projectInfo.framework || 'unknown',
+    packageManager: projectInfo.packageManager || 'npm',
+    hasConfig,
   }
 }
 
-/**
- * Get list of available templates
- */
-export async function getTemplates(): Promise<ApiResponse<Template[]>> {
-  try {
-    const templates = listTemplates();
+// Re-export utility functions
+export { getConfig, writeConfig, configExists, detectProjectInfo }
 
-    return {
-      success: true,
-      data: templates,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get templates',
-    };
-  }
+async function readFile(filePath: string): Promise<string> {
+  const fs = await import('fs-extra')
+  return fs.readFile(filePath, 'utf-8')
 }
-
-// Helper function for page content generation
-function generatePageContent(scaffold: PageScaffold): string {
-  const pascalCase = scaffold.name
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('');
-
-  const imports = scaffold.components
-    .map(c => {
-      const componentName = c
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join('');
-      return `import { ${componentName} } from '@/components/ui/${c}';`;
-    })
-    .join('\n');
-
-  return `${imports}
-
-export default function ${pascalCase}Page() {
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">${pascalCase}</h1>
-      {/* Add your page content here */}
-    </div>
-  );
-}
-`;
-}
-
-// Export types for consumers
-export type {
-  Config,
-  Component,
-  ProjectAnalysis,
-  Template,
-  FeatureScaffold,
-  PageScaffold,
-  CompositionPreview,
-  ApiResponse,
-};

@@ -14,7 +14,6 @@ import { addComponent, addComponentMetadata } from './tools/add-component.js';
 import { scaffoldFeature, scaffoldFeatureMetadata } from './tools/scaffold-feature.js';
 import { scaffoldPage, scaffoldPageMetadata } from './tools/scaffold-page.js';
 import { previewComposition, previewCompositionMetadata } from './tools/preview-composition.js';
-import { updateComponent, updateComponentMetadata } from './tools/update-component.js';
 import { getTemplates, getTemplatesMetadata } from './tools/get-templates.js';
 import { analyzeProject, analyzeProjectMetadata } from './tools/analyze-project.js';
 
@@ -58,7 +57,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: 'object',
           properties: addComponentMetadata.inputSchema.shape,
-          required: ['components'],
+          required: ['name'],
         },
       },
       {
@@ -85,15 +84,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: 'object',
           properties: previewCompositionMetadata.inputSchema.shape,
-          required: ['components'],
-        },
-      },
-      {
-        name: updateComponentMetadata.name,
-        description: updateComponentMetadata.description,
-        inputSchema: {
-          type: 'object',
-          properties: updateComponentMetadata.inputSchema.shape,
           required: ['components'],
         },
       },
@@ -142,9 +132,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case 'preview_composition':
         result = await previewComposition(args as any);
-        break;
-      case 'update_component':
-        result = await updateComponent(args as any);
         break;
       case 'get_templates':
         result = await getTemplates(args as any);

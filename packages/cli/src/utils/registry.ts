@@ -1,96 +1,106 @@
-import type { Component } from '../types/index.js';
+import path from 'path'
+import fs from 'fs-extra'
+import type { RegistryItem } from '../types'
 
-const DEFAULT_REGISTRY = 'https://ui.luman.dev/registry';
+// For now, we'll use the local registry. In production, this would fetch from a CDN
+const REGISTRY_URL = process.env.LUMAN_REGISTRY_URL || 'local'
 
-/**
- * Fetch component metadata from registry
- */
-export async function fetchComponent(name: string, registry: string = DEFAULT_REGISTRY): Promise<Component | null> {
-  try {
-    const url = `${registry}/components/${name}.json`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return await response.json() as Component;
-  } catch (error) {
-    console.error(`Failed to fetch component ${name}:`, error);
-    return null;
+export async function getRegistryIndex(): Promise<string[]> {
+  if (REGISTRY_URL === 'local') {
+    // Read from local monorepo
+    const registryPath = path.resolve(
+      process.cwd(),
+      '../../packages/ui/src/registry/index.json'
+    )
+    const index = await fs.readJson(registryPath)
+    return index.items || []
   }
+
+  // In production, fetch from CDN
+  const response = await fetch(`${REGISTRY_URL}/index.json`)
+  const data = await response.json() as { items?: string[] }
+  return data.items || []
 }
 
-/**
- * List all available components from registry
- */
-export async function listComponents(registry: string = DEFAULT_REGISTRY): Promise<Component[]> {
-  try {
-    const url = `${registry}/index.json`;
-    const response = await fetch(url);
+export async function getRegistryItem(name: string): Promise<RegistryItem | null> {
+  if (REGISTRY_URL === 'local') {
+    // Read from local monorepo
+    const itemPath = path.resolve(
+      process.cwd(),
+      `../../packages/ui/src/registry/items/${name}.json`
+    )
 
-    if (!response.ok) {
-      return [];
+    if (!(await fs.pathExists(itemPath))) {
+      return null
     }
 
-    const data = await response.json() as { components: Component[] };
-    return data.components;
-  } catch (error) {
-    console.error('Failed to list components:', error);
-    return [];
+    const item = await fs.readJson(itemPath)
+
+    // Load file contents for local registry
+    const files = await Promise.all(
+      item.files.map(async (file: any) => {
+        const filePath = path.resolve(
+          process.cwd(),
+          `../../packages/ui/src/${file.path}`
+        )
+        const content = await fs.readFile(filePath, 'utf-8')
+        return {
+          ...file,
+          content,
+        }
+      })
+    )
+
+    return {
+      ...item,
+      files,
+    }
   }
+
+  // In production, fetch from CDN
+  const response = await fetch(`${REGISTRY_URL}/items/${name}.json`)
+  if (!response.ok) {
+    return null
+  }
+
+  return response.json() as Promise<RegistryItem>
 }
 
-/**
- * Fetch component source code
- */
-export async function fetchComponentSource(component: Component, registry: string = DEFAULT_REGISTRY): Promise<Map<string, string>> {
-  const sources = new Map<string, string>();
-
-  for (const file of component.files) {
-    try {
-      const url = `${registry}/components/${component.name}/${file.path}`;
-      const response = await fetch(url);
-
-      if (response.ok) {
-        const content = await response.text();
-        sources.set(file.path, content);
-      }
-    } catch (error) {
-      console.error(`Failed to fetch ${file.path}:`, error);
-    }
-  }
-
-  return sources;
+export async function listComponents(): Promise<string[]> {
+  const index = await getRegistryIndex()
+  return index
 }
 
-/**
- * Resolve component dependencies (including registry dependencies)
- */
-export async function resolveComponentDependencies(
-  componentName: string,
-  registry: string = DEFAULT_REGISTRY
-): Promise<Component[]> {
-  const resolved: Component[] = [];
-  const visited = new Set<string>();
+export async function getComponentDetails(name: string): Promise<RegistryItem | null> {
+  return getRegistryItem(name)
+}
 
-  async function resolve(name: string): Promise<void> {
-    if (visited.has(name)) return;
-    visited.add(name);
+export async function resolveRegistryDependencies(
+  item: RegistryItem
+): Promise<RegistryItem[]> {
+  const dependencies: RegistryItem[] = []
 
-    const component = await fetchComponent(name, registry);
-    if (!component) return;
+  if (!item.registryDependencies || item.registryDependencies.length === 0) {
+    return dependencies
+  }
 
-    resolved.push(component);
-
-    // Recursively resolve registry dependencies
-    if (component.registryDependencies) {
-      for (const dep of component.registryDependencies) {
-        await resolve(dep);
-      }
+  for (const depName of item.registryDependencies) {
+    const dep = await getRegistryItem(depName)
+    if (dep) {
+      dependencies.push(dep)
+      // Recursively resolve dependencies
+      const nestedDeps = await resolveRegistryDependencies(dep)
+      dependencies.push(...nestedDeps)
     }
   }
 
-  await resolve(componentName);
-  return resolved;
+  // Remove duplicates
+  const seen = new Set<string>()
+  return dependencies.filter((dep) => {
+    if (seen.has(dep.name)) {
+      return false
+    }
+    seen.add(dep.name)
+    return true
+  })
 }

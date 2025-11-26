@@ -6,9 +6,12 @@ export const analyzeProjectSchema = z.object({
 });
 
 export async function analyzeProject(args: z.infer<typeof analyzeProjectSchema>) {
-  const result = await api.analyze(args.cwd);
-
-  return result;
+  try {
+    const result = await api.analyzeProject(args.cwd);
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export const analyzeProjectMetadata = {

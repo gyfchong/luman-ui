@@ -3,15 +3,11 @@ import * as api from '@repo/cli/api';
 
 export const getComponentDetailsSchema = z.object({
   name: z.string().describe('Name of the component to get details for'),
-  registry: z.string().optional().describe('Custom registry URL'),
 });
 
 export async function getComponentDetails(args: z.infer<typeof getComponentDetailsSchema>) {
-  const result = await api.getComponentDetails(args.name, {
-    registry: args.registry,
-  });
-
-  return result;
+  const result = await api.getComponentDetails(args.name);
+  return { success: !!result, data: result };
 }
 
 export const getComponentDetailsMetadata = {
