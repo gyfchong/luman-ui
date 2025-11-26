@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 import { defineCommand, runMain } from 'citty'
 import colors from 'picocolors'
-import initCommand from './commands/init'
-import listCommand from './commands/list'
-import addCommand from './commands/add'
-import removeCommand from './commands/remove'
+import initCommand from './commands/init.js'
+import listCommand from './commands/list.js'
+import addCommand from './commands/add.js'
+import removeCommand from './commands/remove.js'
 
 const main = defineCommand({
   meta: {
     name: 'luman',
-    version: '0.0.0',
+    version: '0.1.0',
     description: 'AI-native design system CLI',
   },
   subCommands: {
@@ -26,6 +26,8 @@ const main = defineCommand({
     console.log(`  ${colors.cyan('list')}    List available components`)
     console.log(`  ${colors.cyan('add')}     Add a component to your project`)
     console.log(`  ${colors.cyan('remove')}  Remove a component from your project`)
+    console.log()
+    console.log('Phase 2 commands (scaffold-feature, scaffold-page, etc.) available via API')
     console.log()
   },
 })

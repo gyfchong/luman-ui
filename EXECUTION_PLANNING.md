@@ -164,30 +164,59 @@ MCP Server (wraps) → CLI API (implements) → Capabilities
 
 ### Phase 2: Composition & Generation (Weeks 3-4)
 
-**Goal**: AI-assisted scaffolding working
+**Goal**: LLM-orchestrated component composition working via code mode
+
+**Core Principle**: LLMs are better at writing TypeScript code than making tool calls. The CLI provides primitives, the LLM orchestrates them.
 
 **Tasks:**
 
-- CLI: `scaffoldFeature`, `scaffoldPage`, `previewComposition`, `updateComponent`
-- MCP server setup wrapping CLI capabilities
-- Tool definitions for discovery and installation
-- TypeScript API documentation
-- Template system for feature scaffolding
+- ✅ CLI primitives: `previewComposition`, `updateComponent`, `getPattern`
+- ✅ Pattern documentation system for LLM guidance
+  - Accessibility patterns (WCAG 2.1 AA compliance)
+  - Composition patterns (how to use components together)
+  - Stored in `packages/cli/patterns/` directory
+- ✅ MCP server wrapping CLI primitives (zero business logic)
+- ✅ Comprehensive TypeScript API documentation with code examples
+- ✅ Example workflows showing LLM orchestration patterns
+- ❌ Removed: Template-based scaffolding (contradicts code-mode-first)
+- ❌ Removed: `scaffoldFeature`, `scaffoldPage`, `getTemplates`
 
-**Deliverable**: Users can scaffold complete features via CLI or AI with code mode
+**Pattern Structure:**
 
-### Phase 3: Analysis & Migration (Weeks 5-6)
+```
+packages/cli/patterns/
+├── accessibility/
+│   └── form-accessibility.md    # WCAG patterns, aria attributes
+└── composition/
+    └── form-composition.md      # Component usage examples
+```
 
-**Goal**: Legacy system migration working
+**LLM Workflow:**
+
+1. Read relevant patterns (`getPattern()`)
+2. Preview composition (`previewComposition()`)
+3. Install components (`addComponent()`)
+4. Generate code following patterns (LLM synthesizes from pattern docs)
+5. Write files (standard fs operations)
+
+**Deliverable**: LLMs can build accessible, well-composed features by orchestrating primitives and following pattern documentation
+
+### Phase 3: Component Library & Registry (Weeks 5-6)
+
+**Goal**: Core component library with working registry
+
+**Note**: Phase 3 previously focused on migration features, which have been backlogged. This phase now focuses on building out the component library and registry infrastructure.
 
 **Tasks:**
 
-- CLI: `analyzeProject`, `findEquivalent`, `replaceComponent`, `generateMigrationPlan`, `batchMigrate`
-- Component mapping configs (Material-UI, Chakra, etc.)
-- MCP: Composition and migration tools
-- Enhanced documentation with examples
+- Build core UI components (button, input, label, form, card, dialog, etc.)
+- Registry metadata for each component
+- Component documentation
+- Example usage for each component
+- Testing infrastructure
+- Storybook or similar for component preview
 
-**Deliverable**: AI-assisted migration from legacy design systems
+**Deliverable**: Production-ready component library with registry
 
 ### Phase 4: Backend Infrastructure (Weeks 7-8)
 
