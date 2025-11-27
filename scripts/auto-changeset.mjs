@@ -17,14 +17,14 @@ const { hashFiles } = jiti(resolve(__dirname, '../packages/cli/src/utils/hash.ts
 const REPO_ROOT = resolve(__dirname, '..');
 
 const CONFIG = {
-  ignoredPackages: ['@repo/eslint-config', '@repo/typescript-config', '@repo/ui'],
-  fixedGroups: [['@repo/cli', '@repo/mcp-server']],
-  packagePaths: {
+  // Allowlist: Only these paths trigger package changesets (publishable packages)
+  publishablePackages: {
     'packages/cli/src': '@repo/cli',
     'packages/mcp-server/src': '@repo/mcp-server',
-    'apps/playground/src': 'playground',
-    'apps/docs/src': 'docs'
   },
+  // Fixed groups: packages that must be versioned together
+  fixedGroups: [['@repo/cli', '@repo/mcp-server']],
+  // Component registry paths (for UI component versioning, not package versioning)
   registryPath: 'packages/ui/src/registry',
   conventionalTypes: {
     feat: { bump: 'minor', display: 'Features' },
@@ -100,13 +100,14 @@ function getChangedFiles() {
 }
 
 /**
- * Detect which packages are affected by file changes
+ * Detect which publishable packages are affected by file changes
+ * Only files in the allowlist (publishablePackages) trigger changesets
  */
 function detectAffectedPackages(changedFiles) {
   const packages = new Set();
 
   for (const file of changedFiles) {
-    for (const [pathPrefix, packageName] of Object.entries(CONFIG.packagePaths)) {
+    for (const [pathPrefix, packageName] of Object.entries(CONFIG.publishablePackages)) {
       if (file.startsWith(pathPrefix)) {
         packages.add(packageName);
       }
@@ -129,10 +130,55 @@ function applyFixedGroups(packages) {
     }
   }
 
-  // Filter out ignored packages
-  return Array.from(result).filter(
-    pkg => !CONFIG.ignoredPackages.includes(pkg)
-  );
+  return Array.from(result);
+}
+
+/**
+ * Get allowed commit scopes from package names
+ * Extracts scope names from @repo/package-name -> package-name
+ * Also includes 'ui' for component changes
+ */
+function getAllowedScopes() {
+  const scopes = new Set();
+
+  // Extract scopes from publishable packages
+  for (const packageName of Object.values(CONFIG.publishablePackages)) {
+    const scope = packageName.replace('@repo/', '');
+    scopes.add(scope);
+  }
+
+  // Add 'ui' for component registry changes (versioned separately)
+  scopes.add('ui');
+
+  return scopes;
+}
+
+/**
+ * Filter commits to only those that are relevant for versioning
+ * Includes only:
+ * - Versionable types: feat, fix, perf, build (not docs/test/chore/style/ci)
+ * - User-facing scopes: derived from publishable packages + 'ui' (or no scope)
+ * Excludes infrastructure scopes like: ci, build, deps, scripts, etc.
+ */
+function filterVersionableCommits(commits) {
+  const allowedScopes = getAllowedScopes();
+
+  return commits.filter(commit => {
+    const parsed = parseConventionalCommit(commit);
+    if (!parsed) return false;
+
+    const typeConfig = CONFIG.conventionalTypes[parsed.type];
+    // Exclude if type is not versionable (docs, test, chore, style, ci)
+    if (!typeConfig) return false;
+
+    // If commit has a scope, it must be in the allowed list
+    if (parsed.scope && !allowedScopes.has(parsed.scope)) {
+      return false;
+    }
+
+    // If no scope, allow it (generic changes)
+    return true;
+  });
 }
 
 /**
@@ -337,18 +383,28 @@ async function main() {
 
   console.log(`Found ${changedFiles.length} changed file(s)\n`);
 
-  // Handle package-level changes
+  // Handle package-level changes (only publishable packages)
   let packages = detectAffectedPackages(changedFiles);
   console.log(`📦 Detected packages: ${packages.length > 0 ? packages.join(', ') : 'none'}`);
 
   packages = applyFixedGroups(packages);
+
   if (packages.length > 0) {
     console.log(`   After applying fixed groups: ${packages.join(', ')}`);
 
-    const bumpType = determineBumpType(commits);
-    console.log(`   Determined bump type: ${bumpType}\n`);
+    // Filter commits to only versionable types (not ci/docs/chore/etc)
+    const versionableCommits = filterVersionableCommits(commits);
 
-    generateChangesetFile(packages, bumpType, commits);
+    if (versionableCommits.length === 0) {
+      console.log(`   No versionable commits found (all are ci/docs/chore/etc)\n`);
+      console.log(`   Skipping changeset generation - infrastructure changes only\n`);
+    } else {
+      const bumpType = determineBumpType(versionableCommits);
+      console.log(`   Versionable commits: ${versionableCommits.length}/${commits.length}`);
+      console.log(`   Determined bump type: ${bumpType}\n`);
+
+      generateChangesetFile(packages, bumpType, versionableCommits);
+    }
   } else {
     console.log(`   No publishable packages affected\n`);
   }
