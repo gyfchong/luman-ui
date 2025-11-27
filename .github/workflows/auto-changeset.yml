@@ -50,7 +50,7 @@ jobs:
 
       - name: Generate changeset
         if: steps.check.outputs.has_changesets == 'false'
-        run: node scripts/auto-changeset.mjs
+        run: pnpm tsx scripts/auto-changeset.ts
 
       - name: Check for changes
         if: steps.check.outputs.has_changesets == 'false'
