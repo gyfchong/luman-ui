@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import semver from 'semver';
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
@@ -263,18 +264,7 @@ function detectAffectedComponents(changedFiles, componentNames) {
  * Increment semantic version
  */
 function incrementVersion(currentVersion, bumpType) {
-  const [major, minor, patch] = currentVersion.split('.').map(Number);
-
-  switch (bumpType) {
-    case 'major':
-      return `${major + 1}.0.0`;
-    case 'minor':
-      return `${major}.${minor + 1}.0`;
-    case 'patch':
-      return `${major}.${minor}.${patch + 1}`;
-    default:
-      throw new Error(`Invalid bump type: ${bumpType}`);
-  }
+  return semver.inc(currentVersion, bumpType);
 }
 
 /**
