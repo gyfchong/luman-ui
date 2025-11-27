@@ -22,6 +22,9 @@ export interface RegistryItemFile {
 export interface RegistryItem {
   name: string
   type: RegistryItemType
+  version: string // Semver version (e.g., "1.0.0")
+  contentHash: string // SHA-256 hash of component content
+  publishedAt: string // ISO datetime string
   description?: string
   dependencies?: string[]
   devDependencies?: string[]
@@ -41,6 +44,11 @@ export interface RegistryItem {
     importSpecifier?: string
     displayName?: string
   }
+  changelog?: Array<{
+    version: string
+    date: string
+    changes: string[]
+  }>
 }
 
 export interface Registry {

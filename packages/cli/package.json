@@ -24,6 +24,7 @@
     "consola": "^3.2.3",
     "cosmiconfig": "^9.0.0",
     "defu": "^6.1.4",
+    "diff": "^8.0.2",
     "execa": "^9.5.2",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.2.0",
@@ -33,14 +34,17 @@
     "pathe": "^1.1.2",
     "picocolors": "^1.1.1",
     "pkg-types": "^1.2.1",
+    "semver": "^7.7.3",
     "ts-morph": "^24.0.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/diff": "^8.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.15.3",
+    "@types/semver": "^7.7.1",
     "eslint": "^9.39.1",
     "tsdown": "^0.2.15",
     "typescript": "5.9.2"
