@@ -8,7 +8,6 @@ import removeCommand from './commands/remove.js'
 import { statusCommand } from './commands/status.js'
 import { updateCommand } from './commands/update.js'
 import { versionCommand } from './commands/version.js'
-import { registryCommand } from './commands/registry/index.js'
 
 const main = defineCommand({
   meta: {
@@ -24,7 +23,6 @@ const main = defineCommand({
     status: statusCommand,
     update: updateCommand,
     version: versionCommand,
-    registry: registryCommand,
   },
   async run() {
     console.log(colors.bold('\n✨ Luman UI\n'))
@@ -37,7 +35,6 @@ const main = defineCommand({
     console.log(`  ${colors.cyan('status')}    Check status of installed components`)
     console.log(`  ${colors.cyan('update')}    Update component to latest version`)
     console.log(`  ${colors.cyan('version')}   Display CLI version`)
-    console.log(`  ${colors.cyan('registry')}  Manage component registry`)
     console.log()
     console.log(`Run ${colors.cyan('luman <command> --help')} for more information on a command`)
     console.log()

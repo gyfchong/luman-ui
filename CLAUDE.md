@@ -121,4 +121,52 @@ import { ComponentName } from "@repo/ui/ComponentName";
 
 Internal packages use `workspace:*` protocol in package.json. When adding dependencies between workspaces, use this protocol.
 
-Always use pnpm filters to run per package commands
+### Commit Conventions
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) to enable automated versioning and changelog generation.
+
+**Format**: `<type>(<scope>): <description>`
+
+**Types**:
+- `feat` - New feature (→ minor version bump)
+- `fix` - Bug fix (→ patch version bump)
+- `perf` - Performance improvement (→ patch version bump)
+- `build` - Build system changes (→ patch version bump)
+- `docs` - Documentation only (no version bump)
+- `test` - Test changes (no version bump)
+- `chore` - Maintenance tasks (no version bump)
+- `style` - Code style changes (no version bump)
+- `ci` - CI configuration changes (no version bump)
+
+**Breaking Changes**: Add `!` after type or include `BREAKING CHANGE:` in commit body (→ major version bump)
+
+**Examples**:
+```bash
+# Feature (minor bump)
+git commit -m "feat(ui): add Button component with variants"
+git commit -m "feat(cli): add init command"
+
+# Bug fix (patch bump)
+git commit -m "fix(ui): resolve button focus ring styling"
+git commit -m "fix(cli): handle missing config file gracefully"
+
+# Breaking change (major bump)
+git commit -m "feat(ui)!: redesign Button API to use slots"
+git commit -m "fix(cli)!: change config file format to YAML"
+
+# Documentation (no bump)
+git commit -m "docs: update installation instructions"
+
+# Chore (no bump)
+git commit -m "chore: update dependencies"
+```
+
+**Scope**: Use package name without `@repo/` prefix (ui, cli, mcp-server) or feature area.
+
+**Auto-Changeset**: Our GitHub Actions automatically generate changesets from conventional commits. See `.changeset/README.md` for details.
+
+**Component Registry Versioning**: When you modify UI component files, the auto-changeset workflow automatically updates the component's version in `packages/ui/src/registry/items/{component}.json`. This happens alongside package-level changesets.
+
+### Extra
+
+- Always use pnpm filters to run per package commands
