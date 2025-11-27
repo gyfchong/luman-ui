@@ -118,11 +118,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         throw new Error(`Unknown tool: ${name}`);
     }
 
+    // Wrap result with version metadata
+    const wrappedResult = {
+      success: true,
+      data: result,
+      meta: {
+        serverVersion: '0.1.0',
+        cliVersion: '0.1.0', // CLI and MCP are version-locked
+        timestamp: new Date().toISOString(),
+      },
+    };
+
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(result, null, 2),
+          text: JSON.stringify(wrappedResult, null, 2),
         },
       ],
     };
@@ -135,6 +146,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               success: false,
               error: error instanceof Error ? error.message : 'Unknown error occurred',
+              meta: {
+                serverVersion: '0.1.0',
+                timestamp: new Date().toISOString(),
+              },
             },
             null,
             2

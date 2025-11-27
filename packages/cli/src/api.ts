@@ -18,6 +18,11 @@ import {
 } from './utils/fs'
 import { addDependencies, addDevDependencies } from './utils/packages'
 import { detectProjectInfo } from './utils/detect'
+import {
+  addComponentToManifest,
+  removeComponentFromManifest,
+} from './utils/manifest.js'
+import { hashFiles } from './utils/hash.js'
 
 export interface ListComponentsResult {
   components: string[]
@@ -144,6 +149,22 @@ export async function addComponent(
     await addDevDependencies([...new Set(npmDevDeps)], cwd)
   }
 
+  // Update manifest with installed component tracking
+  // Hash the installed files for drift detection
+  const absoluteFilePaths = filesWritten.map((f) =>
+    f.startsWith('/') ? f : `${cwd}/${f}`
+  )
+  const contentHash = await hashFiles(absoluteFilePaths)
+
+  // Add each component to manifest
+  await addComponentToManifest(
+    cwd,
+    component.name,
+    component.version,
+    contentHash,
+    filesWritten
+  )
+
   return {
     success: true,
     installed,
@@ -189,6 +210,9 @@ export async function removeComponent(
       filesDeleted.push(targetPath)
     }
   }
+
+  // Remove from manifest
+  await removeComponentFromManifest(cwd, name)
 
   return {
     success: true,

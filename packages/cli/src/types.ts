@@ -46,6 +46,9 @@ export interface ProjectInfo {
 export interface RegistryItem {
   name: string
   type: string
+  version: string // Semver version
+  contentHash: string // SHA-256 hash
+  publishedAt: string // ISO datetime
   description?: string
   dependencies?: string[]
   devDependencies?: string[]
@@ -70,4 +73,9 @@ export interface RegistryItem {
     importSpecifier?: string
     displayName?: string
   }
+  changelog?: Array<{
+    version: string
+    date: string
+    changes: string[]
+  }>
 }
