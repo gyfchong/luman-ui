@@ -1,15 +1,13 @@
-import fs from 'fs-extra'
-import path from 'path'
-import type { Framework, PackageManager, ProjectInfo } from '../types'
+import path from "node:path"
+import fs from "fs-extra"
+import type { Framework, PackageManager, ProjectInfo } from "../types"
 
-export async function detectPackageManager(
-  cwd: string = process.cwd()
-): Promise<PackageManager> {
+export async function detectPackageManager(cwd: string = process.cwd()): Promise<PackageManager> {
   const lockFiles = {
-    'pnpm-lock.yaml': 'pnpm' as const,
-    'yarn.lock': 'yarn' as const,
-    'bun.lockb': 'bun' as const,
-    'package-lock.json': 'npm' as const,
+    "pnpm-lock.yaml": "pnpm" as const,
+    "yarn.lock": "yarn" as const,
+    "bun.lockb": "bun" as const,
+    "package-lock.json": "npm" as const,
   }
 
   for (const [lockFile, pm] of Object.entries(lockFiles)) {
@@ -18,16 +16,14 @@ export async function detectPackageManager(
     }
   }
 
-  return 'npm'
+  return "npm"
 }
 
-export async function detectFramework(
-  cwd: string = process.cwd()
-): Promise<Framework> {
-  const packageJsonPath = path.join(cwd, 'package.json')
+export async function detectFramework(cwd: string = process.cwd()): Promise<Framework> {
+  const packageJsonPath = path.join(cwd, "package.json")
 
   if (!(await fs.pathExists(packageJsonPath))) {
-    return 'manual'
+    return "manual"
   }
 
   const packageJson = await fs.readJson(packageJsonPath)
@@ -36,23 +32,21 @@ export async function detectFramework(
     ...packageJson.devDependencies,
   }
 
-  if (deps['next']) return 'next'
-  if (deps['@remix-run/react']) return 'remix'
-  if (deps['astro']) return 'astro'
-  if (deps['vite']) return 'vite'
+  if (deps.next) return "next"
+  if (deps["@remix-run/react"]) return "remix"
+  if (deps.astro) return "astro"
+  if (deps.vite) return "vite"
 
-  return 'manual'
+  return "manual"
 }
 
-export async function detectProjectInfo(
-  cwd: string = process.cwd()
-): Promise<ProjectInfo> {
+export async function detectProjectInfo(cwd: string = process.cwd()): Promise<ProjectInfo> {
   const framework = await detectFramework(cwd)
   const packageManager = await detectPackageManager(cwd)
 
-  const srcDir = await fs.pathExists(path.join(cwd, 'src'))
-  const appDir = await fs.pathExists(path.join(cwd, 'app'))
-  const typescript = await fs.pathExists(path.join(cwd, 'tsconfig.json'))
+  const srcDir = await fs.pathExists(path.join(cwd, "src"))
+  const appDir = await fs.pathExists(path.join(cwd, "app"))
+  const typescript = await fs.pathExists(path.join(cwd, "tsconfig.json"))
 
   return {
     framework,

@@ -1,16 +1,16 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 export const configSchema = z.object({
   $schema: z.string().optional(),
-  style: z.string().default('default'),
+  style: z.string().default("default"),
   rsc: z.boolean().default(false),
   tsx: z.boolean().default(true),
   tailwind: z.object({
     config: z.string(),
     css: z.string(),
-    baseColor: z.string().default('slate'),
+    baseColor: z.string().default("slate"),
     cssVariables: z.boolean().default(true),
-    prefix: z.string().default('').optional(),
+    prefix: z.string().default("").optional(),
   }),
   aliases: z.object({
     components: z.string(),
@@ -23,16 +23,10 @@ export const configSchema = z.object({
 
 export type Config = z.infer<typeof configSchema>
 
-export const packageManagerSchema = z.enum(['npm', 'pnpm', 'yarn', 'bun'])
+export const packageManagerSchema = z.enum(["npm", "pnpm", "yarn", "bun"])
 export type PackageManager = z.infer<typeof packageManagerSchema>
 
-export const frameworkSchema = z.enum([
-  'next',
-  'vite',
-  'remix',
-  'astro',
-  'manual',
-])
+export const frameworkSchema = z.enum(["next", "vite", "remix", "astro", "manual"])
 export type Framework = z.infer<typeof frameworkSchema>
 
 export interface ProjectInfo {

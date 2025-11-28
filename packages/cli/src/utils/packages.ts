@@ -1,5 +1,4 @@
-import { installDependencies, detectPackageManager as detectPM } from 'nypm'
-import type { PackageManager } from '../types'
+import { detectPackageManager as detectPM, installDependencies } from "nypm"
 
 export async function installPackages(
   packages: string[],
@@ -18,7 +17,7 @@ export async function installPackages(
   await installDependencies({
     cwd,
     silent,
-    packageManager: await detectPM(cwd) as any,
+    packageManager: (await detectPM(cwd)) as any,
     ...(dev && { dev }),
   })
 }

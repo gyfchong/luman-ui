@@ -8,9 +8,9 @@
     "luman-mcp": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts",
-    "dev": "tsup src/index.ts --format esm --watch",
-    "lint": "eslint . --max-warnings 0",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "biome check .",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,11 +19,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
-    "eslint": "^9.39.1",
-    "tsup": "^8.3.5",
+    "tsdown": "^0.2.15",
     "typescript": "5.9.2"
   }
 }
