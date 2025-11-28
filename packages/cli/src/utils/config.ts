@@ -1,16 +1,11 @@
-import { cosmiconfig } from 'cosmiconfig'
-import fs from 'fs-extra'
-import path from 'path'
-import type { Config } from '../types'
-import { configSchema } from '../types'
+import path from "node:path"
+import { cosmiconfig } from "cosmiconfig"
+import fs from "fs-extra"
+import type { Config } from "../types"
+import { configSchema } from "../types"
 
-const explorer = cosmiconfig('luman', {
-  searchPlaces: [
-    'luman.config.json',
-    'luman.config.js',
-    'luman.config.ts',
-    'components.json',
-  ],
+const explorer = cosmiconfig("luman", {
+  searchPlaces: ["luman.config.json", "luman.config.js", "luman.config.ts", "components.json"],
 })
 
 export async function getConfig(cwd: string = process.cwd()): Promise<Config | null> {
@@ -23,10 +18,7 @@ export async function getConfig(cwd: string = process.cwd()): Promise<Config | n
   return configSchema.parse(result.config)
 }
 
-export async function resolveConfigPaths(
-  cwd: string,
-  config: Config
-): Promise<Config> {
+export async function resolveConfigPaths(cwd: string, config: Config): Promise<Config> {
   const tailwind = {
     ...config.tailwind,
     config: path.resolve(cwd, config.tailwind.config),
@@ -39,11 +31,8 @@ export async function resolveConfigPaths(
   }
 }
 
-export async function writeConfig(
-  cwd: string,
-  config: Config
-): Promise<void> {
-  const configPath = path.join(cwd, 'components.json')
+export async function writeConfig(cwd: string, config: Config): Promise<void> {
+  const configPath = path.join(cwd, "components.json")
   await fs.writeJson(configPath, config, { spaces: 2 })
 }
 

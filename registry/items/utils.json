@@ -1,0 +1,30 @@
+{
+  "name": "utils",
+  "type": "registry:ui",
+  "version": "1.0.0",
+  "contentHash": "f2e1d0c9b8a7z6y5x4w3v2u1t0s9r8q7p6o5n4m3l2k1j0i9h8g7f6e5d4c3b2a1",
+  "publishedAt": "2025-01-27T00:00:00.000Z",
+  "description": "Utility functions for combining classes",
+  "dependencies": ["clsx", "tailwind-merge"],
+  "files": [
+    {
+      "path": "apps/docs/registry/default/lib/utils.ts",
+      "type": "registry:lib"
+    }
+  ],
+  "meta": {
+    "importSpecifier": "@repo/ui/utils",
+    "displayName": "Utils"
+  },
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-01-27",
+      "changes": [
+        "Initial release",
+        "cn() utility for combining Tailwind classes",
+        "Integrates clsx and tailwind-merge"
+      ]
+    }
+  ]
+}
