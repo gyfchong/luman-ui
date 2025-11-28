@@ -23,20 +23,20 @@
  * #   ./src/components/button.tsx
  */
 
-import { defineCommand } from 'citty'
-import { removeComponent } from '../api'
-import colors from 'picocolors'
-import * as p from '@clack/prompts'
+import * as p from "@clack/prompts"
+import { defineCommand } from "citty"
+import colors from "picocolors"
+import { removeComponent } from "../api"
 
 export default defineCommand({
   meta: {
-    name: 'remove',
-    description: 'Remove a component from your project',
+    name: "remove",
+    description: "Remove a component from your project",
   },
   args: {
     component: {
-      type: 'positional',
-      description: 'Component name to remove',
+      type: "positional",
+      description: "Component name to remove",
       required: true,
     },
   },
@@ -49,7 +49,7 @@ export default defineCommand({
       })
 
       if (p.isCancel(confirmed) || !confirmed) {
-        p.cancel('Operation cancelled')
+        p.cancel("Operation cancelled")
         process.exit(0)
       }
 
@@ -58,16 +58,16 @@ export default defineCommand({
 
       const result = await removeComponent(componentName)
 
-      spinner.stop(`${colors.green('✓')} Successfully removed ${componentName}`)
+      spinner.stop(`${colors.green("✓")} Successfully removed ${componentName}`)
 
-      console.log(`\n${colors.bold('Files deleted:')}`)
+      console.log(`\n${colors.bold("Files deleted:")}`)
       for (const file of result.filesDeleted) {
         console.log(`  ${colors.dim(file)}`)
       }
 
       console.log()
     } catch (error) {
-      console.error(colors.red('Error:'), error instanceof Error ? error.message : error)
+      console.error(colors.red("Error:"), error instanceof Error ? error.message : error)
       process.exit(1)
     }
   },

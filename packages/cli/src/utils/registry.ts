@@ -1,29 +1,26 @@
-import path from 'path'
-import fs from 'fs-extra'
-import type { RegistryItem } from '../types'
+import path from "node:path"
+import fs from "fs-extra"
+import type { RegistryItem } from "../types"
 
 // For now, we'll use the local registry. In production, this would fetch from a CDN
-const REGISTRY_URL = process.env.LUMAN_REGISTRY_URL || 'local'
+const REGISTRY_URL = process.env.LUMAN_REGISTRY_URL || "local"
 
 export async function getRegistryIndex(): Promise<string[]> {
-  if (REGISTRY_URL === 'local') {
+  if (REGISTRY_URL === "local") {
     // Read from local monorepo
-    const registryPath = path.resolve(
-      process.cwd(),
-      '../../packages/ui/src/registry/index.json'
-    )
+    const registryPath = path.resolve(process.cwd(), "../../packages/ui/src/registry/index.json")
     const index = await fs.readJson(registryPath)
     return index.items || []
   }
 
   // In production, fetch from CDN
   const response = await fetch(`${REGISTRY_URL}/index.json`)
-  const data = await response.json() as { items?: string[] }
+  const data = (await response.json()) as { items?: string[] }
   return data.items || []
 }
 
 export async function getRegistryItem(name: string): Promise<RegistryItem | null> {
-  if (REGISTRY_URL === 'local') {
+  if (REGISTRY_URL === "local") {
     // Read from local monorepo
     const itemPath = path.resolve(
       process.cwd(),
@@ -39,11 +36,8 @@ export async function getRegistryItem(name: string): Promise<RegistryItem | null
     // Load file contents for local registry
     const files = await Promise.all(
       item.files.map(async (file: any) => {
-        const filePath = path.resolve(
-          process.cwd(),
-          `../../packages/ui/src/${file.path}`
-        )
-        const content = await fs.readFile(filePath, 'utf-8')
+        const filePath = path.resolve(process.cwd(), `../../packages/ui/src/${file.path}`)
+        const content = await fs.readFile(filePath, "utf-8")
         return {
           ...file,
           content,
@@ -75,9 +69,7 @@ export async function getComponentDetails(name: string): Promise<RegistryItem | 
   return getRegistryItem(name)
 }
 
-export async function resolveRegistryDependencies(
-  item: RegistryItem
-): Promise<RegistryItem[]> {
+export async function resolveRegistryDependencies(item: RegistryItem): Promise<RegistryItem[]> {
   const dependencies: RegistryItem[] = []
 
   if (!item.registryDependencies || item.registryDependencies.length === 0) {

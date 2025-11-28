@@ -1,28 +1,15 @@
-import type { RegistryItem } from './types'
+import type { RegistryItem } from "./types"
+import { configExists, getConfig, resolveConfigPaths, writeConfig } from "./utils/config"
+import { detectProjectInfo } from "./utils/detect"
+import { deleteFile, fileExists, resolveComponentPath, writeFile } from "./utils/fs"
+import { hashFiles } from "./utils/hash.js"
+import { addComponentToManifest, removeComponentFromManifest } from "./utils/manifest.js"
+import { addDependencies, addDevDependencies } from "./utils/packages"
 import {
-  getConfig,
-  writeConfig,
-  configExists,
-  resolveConfigPaths,
-} from './utils/config'
-import {
-  listComponents as listComponentsFromRegistry,
   getComponentDetails as getComponentDetailsFromRegistry,
+  listComponents as listComponentsFromRegistry,
   resolveRegistryDependencies,
-} from './utils/registry'
-import {
-  writeFile,
-  deleteFile,
-  fileExists,
-  resolveComponentPath,
-} from './utils/fs'
-import { addDependencies, addDevDependencies } from './utils/packages'
-import { detectProjectInfo } from './utils/detect'
-import {
-  addComponentToManifest,
-  removeComponentFromManifest,
-} from './utils/manifest.js'
-import { hashFiles } from './utils/hash.js'
+} from "./utils/registry"
 
 export interface ListComponentsResult {
   components: string[]
@@ -61,9 +48,7 @@ export async function listComponents(): Promise<ListComponentsResult> {
 /**
  * Get detailed information about a specific component
  */
-export async function getComponentDetails(
-  name: string
-): Promise<ComponentDetailsResult | null> {
+export async function getComponentDetails(name: string): Promise<ComponentDetailsResult | null> {
   const component = await getComponentDetailsFromRegistry(name)
 
   if (!component) {
@@ -89,7 +74,7 @@ export async function addComponent(
 
   if (!config) {
     throw new Error(
-      'No configuration found. Please run initialization first or create a components.json file.'
+      "No configuration found. Please run initialization first or create a components.json file."
     )
   }
 
@@ -122,11 +107,7 @@ export async function addComponent(
         continue
       }
 
-      const targetPath = resolveComponentPath(
-        resolvedConfig,
-        file.type,
-        file.path
-      )
+      const targetPath = resolveComponentPath(resolvedConfig, file.type, file.path)
 
       await writeFile(targetPath, file.content)
       filesWritten.push(targetPath)
@@ -151,19 +132,11 @@ export async function addComponent(
 
   // Update manifest with installed component tracking
   // Hash the installed files for drift detection
-  const absoluteFilePaths = filesWritten.map((f) =>
-    f.startsWith('/') ? f : `${cwd}/${f}`
-  )
+  const absoluteFilePaths = filesWritten.map((f) => (f.startsWith("/") ? f : `${cwd}/${f}`))
   const contentHash = await hashFiles(absoluteFilePaths)
 
   // Add each component to manifest
-  await addComponentToManifest(
-    cwd,
-    component.name,
-    component.version,
-    contentHash,
-    filesWritten
-  )
+  await addComponentToManifest(cwd, component.name, component.version, contentHash, filesWritten)
 
   return {
     success: true,
@@ -182,7 +155,7 @@ export async function removeComponent(
   const config = await getConfig(cwd)
 
   if (!config) {
-    throw new Error('No configuration found')
+    throw new Error("No configuration found")
   }
 
   const resolvedConfig = await resolveConfigPaths(cwd, config)
@@ -199,11 +172,7 @@ export async function removeComponent(
 
   // Delete files
   for (const file of component.files) {
-    const targetPath = resolveComponentPath(
-      resolvedConfig,
-      file.type,
-      file.path
-    )
+    const targetPath = resolveComponentPath(resolvedConfig, file.type, file.path)
 
     if (await fileExists(targetPath)) {
       await deleteFile(targetPath)
@@ -231,7 +200,7 @@ export async function updateTokens(
   const config = await getConfig(cwd)
 
   if (!config) {
-    throw new Error('No configuration found')
+    throw new Error("No configuration found")
   }
 
   const resolvedConfig = await resolveConfigPaths(cwd, config)
@@ -247,7 +216,7 @@ export async function updateTokens(
   // Update CSS variables
   for (const [key, value] of Object.entries(tokens)) {
     const varName = `--${key}`
-    const regex = new RegExp(`${varName}:\\s*[^;]+;`, 'g')
+    const regex = new RegExp(`${varName}:\\s*[^;]+;`, "g")
 
     if (regex.test(cssContent)) {
       cssContent = cssContent.replace(regex, `${varName}: ${value};`)
@@ -292,7 +261,7 @@ export interface PatternPrinciple {
 
 export interface Pattern {
   name: string
-  category: 'accessibility' | 'composition'
+  category: "accessibility" | "composition"
   relatedComponents: string[]
   overview: string
   principles: PatternPrinciple[]
@@ -309,9 +278,7 @@ export interface GetPatternResult {
  * Preview a composition without installing
  * Shows what components, files, and dependencies will be added
  */
-export async function previewComposition(
-  componentNames: string[]
-): Promise<CompositionPreview> {
+export async function previewComposition(componentNames: string[]): Promise<CompositionPreview> {
   const components = componentNames
   const files: Array<{ path: string; type: string }> = []
   const dependencies: string[] = []
@@ -343,8 +310,8 @@ export async function analyzeProject(cwd?: string): Promise<ProjectAnalysis> {
   const hasConfig = await configExists(cwd)
 
   return {
-    framework: projectInfo.framework || 'unknown',
-    packageManager: projectInfo.packageManager || 'npm',
+    framework: projectInfo.framework || "unknown",
+    packageManager: projectInfo.packageManager || "npm",
     hasConfig,
   }
 }
@@ -352,26 +319,32 @@ export async function analyzeProject(cwd?: string): Promise<ProjectAnalysis> {
 /**
  * Parse markdown pattern into structured data
  */
-function parsePattern(content: string, patternName: string, category: 'accessibility' | 'composition'): Pattern {
+function parsePattern(
+  content: string,
+  patternName: string,
+  category: "accessibility" | "composition"
+): Pattern {
   // Extract components from frontmatter-like syntax
   const relatedComponents: string[] = []
   const componentMatches = content.match(/components?:\s*\[(.*?)\]/i)
-  if (componentMatches && componentMatches[1]) {
+  if (componentMatches?.[1]) {
     relatedComponents.push(
-      ...componentMatches[1].split(',').map(c => c.trim().replace(/['"]/g, ''))
+      ...componentMatches[1].split(",").map((c) => c.trim().replace(/['"]/g, ""))
     )
   }
 
   // Extract overview (text between ## Overview and next ##)
   const overviewMatch = content.match(/## Overview\s+(.*?)(?=\n##|\n```|$)/s)
-  const overview = overviewMatch?.[1]?.trim() || ''
+  const overview = overviewMatch?.[1]?.trim() || ""
 
   // Extract principles (### sections under ## Core Principles)
   const principles: PatternPrinciple[] = []
   const principlesSection = content.match(/## Core Principles(.*?)(?=\n## (?!.*###)|$)/s)
 
   if (principlesSection?.[1]) {
-    const principleMatches = principlesSection[1].matchAll(/### (\d+\.\s+.*?)\n(.*?)(?=\n###|\n##|$)/gs)
+    const principleMatches = principlesSection[1].matchAll(
+      /### (\d+\.\s+.*?)\n(.*?)(?=\n###|\n##|$)/gs
+    )
 
     for (const match of principleMatches) {
       const title = match[1]?.trim()
@@ -381,9 +354,9 @@ function parsePattern(content: string, patternName: string, category: 'accessibi
 
       // Extract description (non-code text)
       const description = body
-        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-        .replace(/\*\*/g, '') // Remove bold
-        .replace(/\n\n+/g, '\n') // Collapse multiple newlines
+        .replace(/```[\s\S]*?```/g, "") // Remove code blocks
+        .replace(/\*\*/g, "") // Remove bold
+        .replace(/\n\n+/g, "\n") // Collapse multiple newlines
         .trim()
 
       // Extract code examples
@@ -394,8 +367,8 @@ function parsePattern(content: string, patternName: string, category: 'accessibi
         const code = codeMatch[2]?.trim()
         if (code) {
           codeExamples.push({
-            language: codeMatch[1] || 'typescript',
-            code
+            language: codeMatch[1] || "typescript",
+            code,
           })
         }
       }
@@ -409,8 +382,8 @@ function parsePattern(content: string, patternName: string, category: 'accessibi
   const exampleMatch = content.match(/## Complete.*Example\s+```(\w+)?\n([\s\S]*?)```/)
   if (exampleMatch?.[2]) {
     completeExample = {
-      language: exampleMatch[1] || 'typescript',
-      code: exampleMatch[2].trim()
+      language: exampleMatch[1] || "typescript",
+      code: exampleMatch[2].trim(),
     }
   }
 
@@ -420,7 +393,7 @@ function parsePattern(content: string, patternName: string, category: 'accessibi
   if (checklistMatch?.[1]) {
     const items = checklistMatch[1].match(/- \[.\] (.*)/g)
     if (items) {
-      testingChecklist.push(...items.map(item => item.replace(/- \[.\] /, '').trim()))
+      testingChecklist.push(...items.map((item) => item.replace(/- \[.\] /, "").trim()))
     }
   }
 
@@ -430,7 +403,7 @@ function parsePattern(content: string, patternName: string, category: 'accessibi
   if (wcagMatch?.[1]) {
     const items = wcagMatch[1].match(/- \*\*([\d.]+.*?)\*\*/g)
     if (items) {
-      wcagCompliance.push(...items.map(item => item.replace(/- \*\*|\*\*/g, '').trim()))
+      wcagCompliance.push(...items.map((item) => item.replace(/- \*\*|\*\*/g, "").trim()))
     }
   }
 
@@ -450,28 +423,32 @@ function parsePattern(content: string, patternName: string, category: 'accessibi
  * Get pattern documentation for LLM guidance
  * Returns our recommended patterns for accessibility and composition as structured data
  */
-export async function getPattern(
-  patternName: string
-): Promise<GetPatternResult> {
-  const fs = await import('fs-extra')
-  const { fileURLToPath } = await import('url')
-  const { dirname, join } = await import('path')
+export async function getPattern(patternName: string): Promise<GetPatternResult> {
+  const fs = await import("fs-extra")
+  const { fileURLToPath } = await import("node:url")
+  const { dirname, join } = await import("node:path")
 
   // Get the package root directory
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = dirname(__filename)
-  const packageRoot = join(__dirname, '..')
-  const patternsDir = join(packageRoot, 'patterns')
+  const packageRoot = join(__dirname, "..")
+  const patternsDir = join(packageRoot, "patterns")
 
   // Map pattern name to file path
-  const patternPaths: Record<string, { file: string; category: 'accessibility' | 'composition' }> = {
-    'form-accessibility': { file: 'accessibility/form-accessibility.md', category: 'accessibility' },
-    'form-composition': { file: 'composition/form-composition.md', category: 'composition' },
-  }
+  const patternPaths: Record<string, { file: string; category: "accessibility" | "composition" }> =
+    {
+      "form-accessibility": {
+        file: "accessibility/form-accessibility.md",
+        category: "accessibility",
+      },
+      "form-composition": { file: "composition/form-composition.md", category: "composition" },
+    }
 
   const patternInfo = patternPaths[patternName]
   if (!patternInfo) {
-    throw new Error(`Pattern "${patternName}" not found. Available patterns: ${Object.keys(patternPaths).join(', ')}`)
+    throw new Error(
+      `Pattern "${patternName}" not found. Available patterns: ${Object.keys(patternPaths).join(", ")}`
+    )
   }
 
   const patternPath = join(patternsDir, patternInfo.file)
@@ -481,7 +458,7 @@ export async function getPattern(
     throw new Error(`Pattern file not found: ${patternPath}`)
   }
 
-  const content = await fs.readFile(patternPath, 'utf-8')
+  const content = await fs.readFile(patternPath, "utf-8")
   const pattern = parsePattern(content, patternName, patternInfo.category)
 
   return { pattern }
@@ -491,6 +468,6 @@ export async function getPattern(
 export { getConfig, writeConfig, configExists, detectProjectInfo }
 
 async function readFile(filePath: string): Promise<string> {
-  const fs = await import('fs-extra')
-  return fs.readFile(filePath, 'utf-8')
+  const fs = await import("fs-extra")
+  return fs.readFile(filePath, "utf-8")
 }
