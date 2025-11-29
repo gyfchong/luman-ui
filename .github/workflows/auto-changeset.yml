@@ -8,7 +8,7 @@ on:
 jobs:
   auto-changeset:
     # Skip if PR title contains [skip changeset]
-    if: "!contains(github.event.pull_request.title, '[skip changeset]')"
+    if: ${{ !contains(github.event.pull_request.title, '[skip changeset]') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,8 +29,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: "18"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -69,7 +69,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .changeset/*.md packages/ui/src/registry/items/*.json
+          git add .changeset/*.md registry/items/*.json
           git commit -m "chore: auto-generate changeset and bump component versions"
           git push
 
@@ -92,7 +92,7 @@ jobs:
             }
 
             // Check for registry updates
-            const registryDir = 'packages/ui/src/registry/items';
+            const registryDir = 'registry/items';
             let registryUpdates = [];
             if (fs.existsSync(registryDir)) {
               const items = fs.readdirSync(registryDir).filter(f => f.endsWith('.json'));
