@@ -55,6 +55,17 @@ Each package manages its own TypeScript configuration independently using recomm
 
 All configs use strict type checking, ES2022 target, and modern module resolution.
 
+**IMPORTANT - ESM Import Extensions:**
+All local imports MUST include `.ts` extensions in TypeScript source files:
+```typescript
+import { foo } from "./utils/helper.ts"  // ✅ Correct
+import { foo } from "./utils/helper"      // ❌ Wrong
+```
+The bundler (tsdown/tsup) automatically rewrites `.ts` to `.js` in the build output. This is required because:
+- TypeScript configs use `allowImportingTsExtensions: true`
+- Node.js ESM requires explicit file extensions at runtime
+- The build tools handle the transformation automatically
+
 ### Biome Configuration
 Biome is configured at the workspace root (`biome.json`) and handles both linting and formatting:
 - Uses recommended rules for linting

@@ -6,7 +6,7 @@ export const configSchema = z.object({
   rsc: z.boolean().default(false),
   tsx: z.boolean().default(true),
   tailwind: z.object({
-    config: z.string(),
+    config: z.string().optional(),
     css: z.string(),
     baseColor: z.string().default("slate"),
     cssVariables: z.boolean().default(true),

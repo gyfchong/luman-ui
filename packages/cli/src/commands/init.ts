@@ -34,6 +34,7 @@ import { defineCommand } from "citty"
 import colors from "picocolors"
 import { addComponent, configExists, detectProjectInfo, listComponents, writeConfig } from "../api"
 import type { Config } from "../types"
+import { detectTailwindVersion } from "../utils/detect.ts"
 
 export default defineCommand({
   meta: {
@@ -80,6 +81,10 @@ export default defineCommand({
       console.log(`${colors.dim("Package Manager:")} ${projectInfo.packageManager}`)
       console.log(`${colors.dim("TypeScript:")} ${projectInfo.typescript ? "Yes" : "No"}`)
 
+      // Detect Tailwind version
+      const tailwindVersion = await detectTailwindVersion()
+      const requiresTailwindConfig = tailwindVersion === null || tailwindVersion < 4
+
       // Ask for configuration
       const componentsPath = (await p.text({
         message: "Where would you like to install components?",
@@ -114,15 +119,19 @@ export default defineCommand({
         process.exit(0)
       }
 
-      const tailwindConfig = (await p.text({
-        message: "Where is your tailwind.config file?",
-        placeholder: "./tailwind.config.ts",
-        defaultValue: "./tailwind.config.ts",
-      })) as string
+      let tailwindConfig: string | undefined
 
-      if (p.isCancel(tailwindConfig)) {
-        p.cancel("Operation cancelled")
-        process.exit(0)
+      if (requiresTailwindConfig) {
+        tailwindConfig = (await p.text({
+          message: "Where is your tailwind.config file?",
+          placeholder: "./tailwind.config.ts",
+          defaultValue: "./tailwind.config.ts",
+        })) as string
+
+        if (p.isCancel(tailwindConfig)) {
+          p.cancel("Operation cancelled")
+          process.exit(0)
+        }
       }
 
       // Create config
@@ -131,7 +140,7 @@ export default defineCommand({
         rsc: projectInfo.framework === "next",
         tsx: projectInfo.typescript,
         tailwind: {
-          config: tailwindConfig,
+          ...(tailwindConfig ? { config: tailwindConfig } : {}),
           css: cssPath,
           baseColor: "slate",
           cssVariables: true,

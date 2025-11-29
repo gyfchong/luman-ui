@@ -21,7 +21,7 @@ export async function getConfig(cwd: string = process.cwd()): Promise<Config | n
 export async function resolveConfigPaths(cwd: string, config: Config): Promise<Config> {
   const tailwind = {
     ...config.tailwind,
-    config: path.resolve(cwd, config.tailwind.config),
+    ...(config.tailwind.config ? { config: path.resolve(cwd, config.tailwind.config) } : {}),
     css: path.resolve(cwd, config.tailwind.css),
   }
 

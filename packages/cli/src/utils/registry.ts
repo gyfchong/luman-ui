@@ -8,7 +8,7 @@ const REGISTRY_URL = process.env.LUMAN_REGISTRY_URL || "local"
 export async function getRegistryIndex(): Promise<string[]> {
   if (REGISTRY_URL === "local") {
     // Read from local monorepo
-    const registryPath = path.resolve(process.cwd(), "../../packages/ui/src/registry/index.json")
+    const registryPath = path.resolve(process.cwd(), "../../registry/index.json")
     const index = await fs.readJson(registryPath)
     return index.items || []
   }
@@ -24,7 +24,7 @@ export async function getRegistryItem(name: string): Promise<RegistryItem | null
     // Read from local monorepo
     const itemPath = path.resolve(
       process.cwd(),
-      `../../packages/ui/src/registry/items/${name}.json`
+      `../../registry/items/${name}.json`
     )
 
     if (!(await fs.pathExists(itemPath))) {
@@ -36,7 +36,7 @@ export async function getRegistryItem(name: string): Promise<RegistryItem | null
     // Load file contents for local registry
     const files = await Promise.all(
       item.files.map(async (file: any) => {
-        const filePath = path.resolve(process.cwd(), `../../packages/ui/src/${file.path}`)
+        const filePath = path.resolve(process.cwd(), `../../${file.path}`)
         const content = await fs.readFile(filePath, "utf-8")
         return {
           ...file,

@@ -30,3 +30,6 @@ npm-debug.log*
 # Misc
 .DS_Store
 *.pem
+
+# Local MCP configuration (contains machine-specific paths)
+.mcp.json

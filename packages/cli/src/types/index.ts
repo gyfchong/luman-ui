@@ -28,7 +28,7 @@ export interface Config {
   rsc: boolean
   tsx: boolean
   tailwind: {
-    config: string
+    config?: string
     css: string
     baseColor: string
     cssVariables: boolean

@@ -1,13 +1,13 @@
-import type { RegistryItem } from "./types"
-import { configExists, getConfig, resolveConfigPaths, writeConfig } from "./utils/config"
-import { detectProjectInfo } from "./utils/detect"
-import { deleteFile, fileExists, resolveComponentPath, writeFile } from "./utils/fs"
-import { addDependencies, addDevDependencies } from "./utils/packages"
+import type { RegistryItem } from "./types.ts"
+import { configExists, getConfig, resolveConfigPaths, writeConfig } from "./utils/config.ts"
+import { detectProjectInfo, detectTailwindCSS, detectTailwindVersion } from "./utils/detect.ts"
+import { deleteFile, fileExists, resolveComponentPath, writeFile } from "./utils/fs.ts"
+import { addDependencies, addDevDependencies } from "./utils/packages.ts"
 import {
   getComponentDetails as getComponentDetailsFromRegistry,
   listComponents as listComponentsFromRegistry,
   resolveRegistryDependencies,
-} from "./utils/registry"
+} from "./utils/registry.ts"
 
 export interface ListComponentsResult {
   components: string[]
@@ -73,6 +73,16 @@ export async function addComponent(
   if (!config) {
     throw new Error(
       "No configuration found. Please run initialization first or create a components.json file."
+    )
+  }
+
+  // Check if Tailwind CSS is installed
+  const hasTailwind = await detectTailwindCSS(cwd)
+  if (!hasTailwind) {
+    throw new Error(
+      "Tailwind CSS is required but not found in your project.\n\n" +
+        "Please install Tailwind CSS first by following the official guide:\n" +
+        "https://tailwindcss.com/docs/installation"
     )
   }
 
@@ -452,7 +462,7 @@ export async function getPattern(patternName: string): Promise<GetPatternResult>
 }
 
 // Re-export utility functions
-export { getConfig, writeConfig, configExists, detectProjectInfo }
+export { getConfig, writeConfig, configExists, detectProjectInfo, detectTailwindVersion }
 
 async function readFile(filePath: string): Promise<string> {
   const fs = await import("fs-extra")
