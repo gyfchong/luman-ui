@@ -1,7 +1,7 @@
-import { hashFile, hashFiles } from './hash.js'
+import { hashFiles } from './hash.js'
 import { readManifest } from './manifest.js'
 import { getRegistryItem } from './registry.js'
-import type { StatusResult, ComponentStatus } from '../types/versioning.js'
+import type { StatusResult } from '../types/versioning.js'
 import { pathExists } from 'fs-extra'
 import { join } from 'node:path'
 

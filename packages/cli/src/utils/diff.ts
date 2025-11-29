@@ -18,7 +18,7 @@ import type { RegistryItem, Config } from '../types.js'
  */
 export async function generateDiff(
   cwd: string,
-  componentName: string,
+  _componentName: string,
   registryItem: RegistryItem
 ): Promise<string> {
   const config = await getConfig(cwd)
