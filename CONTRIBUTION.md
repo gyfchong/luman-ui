@@ -44,7 +44,6 @@ pnpm build
 
 # Build specific package
 pnpm build --filter=@repo/cli
-pnpm build --filter=@repo/mcp-server
 ```
 
 **Always test the built output**, not just TypeScript compilation.
@@ -54,9 +53,6 @@ pnpm build --filter=@repo/mcp-server
 ```bash
 # Watch mode for CLI (auto-rebuilds on changes)
 pnpm dev --filter=@repo/cli
-
-# Watch mode for MCP server
-pnpm dev --filter=@repo/mcp-server
 ```
 
 ### Code Quality
@@ -201,118 +197,6 @@ rm -f components.json
 - Test both successful installations and error scenarios
 - Verify that TypeScript compilation works after component installation
 
-## Testing the MCP Server
-
-### 1. Build the MCP server
-
-```bash
-pnpm build --filter=@repo/mcp-server
-```
-
-### 2. Test the MCP server directly
-
-The MCP server communicates via stdio, so you can test it manually:
-
-```bash
-node packages/mcp-server/dist/index.js
-```
-
-You should see: `luman-ui MCP server running on stdio` in stderr.
-
-### 3. Configure in Claude Desktop
-
-To properly test the MCP server with Claude:
-
-1. Edit your Claude Desktop config:
-   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - Linux: `~/.config/Claude/claude_desktop_config.json`
-   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-2. Add the MCP server (update the path to match your local setup):
-
-   ```json
-   {
-     "mcpServers": {
-       "luman-ui": {
-         "command": "node",
-         "args": ["/absolute/path/to/luman-ui/packages/mcp-server/dist/index.js"]
-       }
-     }
-   }
-   ```
-
-3. Restart Claude Desktop
-
-4. The server provides these tools:
-   - `list_components` - List available components
-   - `get_component_details` - Get details about a specific component
-   - `add_component` - Add a component to a project
-   - `preview_composition` - Preview component compositions
-   - `get_pattern` - Get design patterns
-   - `analyze_project` - Analyze project structure
-
-### 4. Watch mode for development
-
-```bash
-pnpm dev --filter=@repo/mcp-server
-```
-
-**Note**: After rebuilding in watch mode, you'll need to restart Claude Desktop to pick up the changes.
-
-### 5. Using with Claude Code
-
-To test the MCP server with Claude Code itself, you have two options:
-
-#### Option A: Project-scoped (Recommended for Development)
-
-Create `.mcp.json` at the project root:
-
-```bash
-# From the repository root
-cat > .mcp.json << 'EOF'
-{
-  "mcpServers": {
-    "luman-ui": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["/absolute/path/to/luman-ui/packages/mcp-server/dist/index.js"]
-    }
-  }
-}
-EOF
-```
-
-Replace `/absolute/path/to/luman-ui` with your actual project path. This configuration can be committed to git for team sharing.
-
-#### Option B: User-scoped
-
-Create or edit the user config file:
-- Linux: `~/.config/claude-code/mcp.json`
-- macOS: `~/Library/Application Support/ClaudeCode/mcp.json`
-- Windows: `%APPDATA%\ClaudeCode\mcp.json`
-
-Use the same JSON format as Option A.
-
-#### After Configuration
-
-1. **Completely exit** Claude Code (close all windows)
-2. **Restart** Claude Code
-3. Use `/mcp` command to verify the server is loaded
-4. The `luman-ui` MCP server tools should now be available
-
-**Note**: Configuration changes require a full restart of Claude Code. After rebuilding the MCP server in watch mode, you'll need to restart Claude Code to pick up the changes.
-
-## Testing Both Together
-
-Since the MCP server depends on the CLI package, you may want to build both:
-
-```bash
-# Build both packages
-pnpm build --filter=@repo/cli --filter=@repo/mcp-server
-
-# Or build everything
-pnpm build
-```
 
 ## Adding New Components
 
@@ -332,7 +216,6 @@ When adding components to the registry:
 - `apps/docs` - Documentation and showcase app (TanStack Start)
   - `registry/default/` - Component source code
 - `packages/cli` - CLI tooling for installing components
-- `packages/mcp-server` - MCP server integration
 - `registry/` - Registry metadata (JSON files)
 
 ## Pull Request Guidelines

@@ -42,7 +42,6 @@ This is a Turborepo monorepo following the shadcn/ui model:
 
 **Packages** (`packages/`):
 - `@repo/cli` - CLI tooling for installing components
-- `@repo/mcp-server` - MCP server integration
 
 ### Package Manager
 Uses **pnpm** with workspace protocol for internal dependencies. Node.js >=18 required.
@@ -51,7 +50,6 @@ Uses **pnpm** with workspace protocol for internal dependencies. Node.js >=18 re
 Each package manages its own TypeScript configuration independently using recommended TypeScript defaults:
 - **apps/docs** - Vite-optimized config with bundler resolution, React JSX transform
 - **packages/cli** - Strict ESNext config with bundler resolution for tsdown
-- **packages/mcp-server** - Strict ESNext config with bundler resolution for tsup
 
 All configs use strict type checking, ES2022 target, and modern module resolution.
 
@@ -108,7 +106,6 @@ The repository is in early development:
 - Component source lives in `apps/docs/registry/default/` with button component example
 - Registry metadata system is in place at root level
 - CLI package is in development for component installation
-- MCP server integration is a stub
 - Docs app uses TanStack Start for routing and SSR
 
 ### Adding New Components
