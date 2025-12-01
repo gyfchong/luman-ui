@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:registry": "tsx scripts/build-registry.ts",
+    "build:registry:watch": "tsx watch scripts/build-registry.ts",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "biome format --write .",
@@ -10,6 +12,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8",
+    "tsx": "^4.19.2",
     "turbo": "^2.6.1",
     "typescript": "5.9.2"
   },
