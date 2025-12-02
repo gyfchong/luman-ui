@@ -4,6 +4,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { generateComponentTypes } from './builders/generate-types.ts'
 import { generateTailwindConfig } from './builders/generate-tailwind.ts'
+import { generateCVA } from './builders/generate-cva.ts'
 import type { DesignTokens } from './schema.ts'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -11,6 +12,7 @@ const __dirname = dirname(__filename)
 
 const TOKENS_PATH = resolve(__dirname, 'design-tokens.json')
 const GENERATED_DIR = resolve(__dirname, 'generated')
+const COMPONENTS_DIR = resolve(__dirname, '../components')
 const TYPES_OUTPUT = resolve(GENERATED_DIR, 'component-types.ts')
 const TAILWIND_OUTPUT = resolve(__dirname, '../../tailwind.config.js')
 
@@ -39,6 +41,16 @@ export default ${JSON.stringify(tailwindConfig, null, 2)}
 `
     writeFileSync(TAILWIND_OUTPUT, tailwindConfigContent, 'utf-8')
     console.log('✅ Generated Tailwind config → tailwind.config.js')
+
+    // 5. Generate CVA variants
+    const cvaFiles = generateCVA(tokens)
+    mkdirSync(COMPONENTS_DIR, { recursive: true })
+
+    for (const [componentName, cvaCode] of cvaFiles) {
+      const outputPath = resolve(COMPONENTS_DIR, `${componentName}.variants.ts`)
+      writeFileSync(outputPath, cvaCode, 'utf-8')
+      console.log(`✅ Generated CVA variants → src/components/${componentName}.variants.ts`)
+    }
 
     console.log('\n✨ Build complete!\n')
   } catch (error) {

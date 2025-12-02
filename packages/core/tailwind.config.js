@@ -1,5 +1,5 @@
 // Auto-generated from design-tokens.json - DO NOT EDIT
-// Last updated: 2025-12-02T09:54:38.474Z
+// Last updated: 2025-12-02T10:57:45.797Z
 
 export default {
   "theme": {

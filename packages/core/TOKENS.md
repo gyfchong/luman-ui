@@ -1,6 +1,6 @@
 # Design Tokens System
 
-This package uses a design tokens system that auto-generates TypeScript types and Tailwind configuration from a single source of truth.
+This package uses a design tokens system that auto-generates TypeScript types, Tailwind configuration, and CVA variants from a single source of truth.
 
 ## Quick Start
 
@@ -62,29 +62,17 @@ pnpm build:tokens
 This automatically generates:
 - ✅ TypeScript type: `ButtonVariant = 'primary' | 'secondary' | ... | 'success'`
 - ✅ Tailwind classes: `button-success-background-default`, `button-success-background-hover`, etc.
+- ✅ CVA variants: Complete `button.variants.ts` with all class mappings
 
-### 3. Add CVA Mapping
-
-Update the component's CVA definition:
-
-```tsx
-const buttonVariants = cva('...', {
-  variants: {
-    variant: {
-      // ... existing variants
-      success: 'bg-button-success-background-default text-button-success-text hover:bg-button-success-background-hover'
-    }
-  }
-})
-```
-
-### 4. Use It!
+### 3. Use It!
 
 ```tsx
 <Button variant="success">Save Changes</Button>
 ```
 
-TypeScript will autocomplete the new variant! ✨
+**That's it!** The component automatically uses the generated CVA file. TypeScript will autocomplete the new variant! ✨
+
+No manual CVA mapping needed - everything is derived from tokens.
 
 ## File Structure
 
@@ -97,11 +85,13 @@ packages/core/
 │   │   ├── build.ts                     # Build script
 │   │   ├── builders/
 │   │   │   ├── generate-types.ts        # Type generator
-│   │   │   └── generate-tailwind.ts     # Tailwind config generator
-│   │   └── generated/                   # Auto-generated (git-ignored)
+│   │   │   ├── generate-tailwind.ts     # Tailwind config generator
+│   │   │   └── generate-cva.ts          # CVA variants generator
+│   │   └── generated/                   # Auto-generated
 │   │       └── component-types.ts       # ✨ Generated types
 │   └── components/
-│       └── button.tsx                   # Uses generated types
+│       ├── button.tsx                   # Uses generated types
+│       └── button.variants.ts           # ✨ Auto-generated CVA
 └── tailwind.config.js                   # ✨ Auto-generated
 ```
 
@@ -138,4 +128,5 @@ Follows the [W3C Design Tokens spec](https://designtokens.org/):
 - ✅ **Auto-sync** - Types update when tokens change
 - ✅ **Pure tokens** - Just values, no behavior
 - ✅ **Tailwind-powered** - No custom CSS to maintain
-- ✅ **Designer-friendly** - Export from Figma → types update automatically
+- ✅ **Zero manual mapping** - CVA variants auto-generated from tokens
+- ✅ **Designer-friendly** - Export from Figma → types + styles update automatically
