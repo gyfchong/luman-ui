@@ -1,4 +1,4 @@
-# @repo/react
+# @luman-ui/core
 
 React component library with tree-shakeable components built on Base-UI.
 
@@ -19,7 +19,7 @@ This package is currently private and part of the monorepo.
 Import individual components for optimal tree-shaking:
 
 ```tsx
-import { Button } from "@repo/react/button";
+import { Button } from "@luman-ui/core/button";
 
 function App() {
   return (
