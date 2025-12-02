@@ -24,7 +24,8 @@
 
     // Language
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
     "useDefineForClassFields": true,
 
     // Skip Checks
@@ -33,6 +34,6 @@
     // Emit
     "noEmit": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "setup.ts", "vitest.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
