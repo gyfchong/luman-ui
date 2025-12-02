@@ -1,0 +1,4 @@
+{
+  "$schema": "./schema.json",
+  "items": ["utils", "button"]
+}

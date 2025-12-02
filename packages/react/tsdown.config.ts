@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   outDir: "dist",
-  external: ["react", "react-dom", "@base-ui-components/react", "clsx", "tailwind-merge"],
+  external: ["react", "react-dom", "@mui/base"],
 })
