@@ -1,5 +1,5 @@
 {
-  "name": "@repo/react",
+  "name": "@luman-ui/core",
   "version": "0.1.0",
   "description": "React component library with tree-shakeable components",
   "private": true,
