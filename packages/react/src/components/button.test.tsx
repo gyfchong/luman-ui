@@ -7,13 +7,26 @@ import { Button } from "./button.tsx"
 describe("Button", () => {
   describe("Rendering", () => {
     it("should render with children", () => {
-      render(<Button>Click me</Button>)
-      expect(screen.getByRole("button", { name: "Click me" })).toBeInTheDocument()
+      const { container } = render(<Button>Click me</Button>)
+      expect(container).toMatchSnapshot()
     })
 
     it("should render with custom className", () => {
-      render(<Button className="custom-class">Click me</Button>)
-      expect(screen.getByRole("button")).toHaveClass("custom-class")
+      const { container } = render(<Button className="custom-class">Click me</Button>)
+      expect(container).toMatchSnapshot()
+    })
+
+    it("should render when disabled", () => {
+      const { container } = render(<Button disabled>Click me</Button>)
+      expect(container).toMatchSnapshot()
+    })
+
+    it("should render with different button types", () => {
+      const { container: submitContainer } = render(<Button type="submit">Submit</Button>)
+      expect(submitContainer).toMatchSnapshot()
+
+      const { container: resetContainer } = render(<Button type="reset">Reset</Button>)
+      expect(resetContainer).toMatchSnapshot()
     })
   })
 
