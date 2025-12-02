@@ -59,8 +59,29 @@ pnpm build
 
 ### Test
 ```bash
-pnpm test
+pnpm test                    # Unit tests
+pnpm test:coverage           # With coverage
 ```
+
+### Visual Testing
+Visual regression tests use Vitest browser mode with Playwright to capture actual screenshots:
+
+```bash
+# Install Playwright browsers (one-time setup)
+pnpm exec playwright install chromium
+
+# Run visual tests
+pnpm test:visual             # Run visual snapshot tests
+
+# Update snapshots
+pnpm test:visual:update      # Update visual snapshots
+```
+
+Visual tests run in a real Chromium browser and capture screenshots for:
+- Default button rendering
+- Custom className styling
+- Disabled state appearance
+- Button type variations (submit, reset)
 
 ### Type Check
 ```bash

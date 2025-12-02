@@ -12,5 +12,12 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       exclude: ["node_modules/", "dist/", "src/test/", "**/*.config.ts", "**/*.d.ts"],
     },
+    browser: {
+      enabled: process.env.BROWSER_TEST === "true",
+      name: "chromium",
+      provider: "playwright",
+      headless: true,
+      screenshotFailures: false,
+    },
   },
 })
