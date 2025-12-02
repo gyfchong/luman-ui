@@ -12,8 +12,10 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
+    "build": "pnpm build:tokens && tsdown",
+    "build:tokens": "tsx src/tokens/build.ts",
+    "dev": "pnpm dev:tokens & tsdown --watch",
+    "dev:tokens": "tsx src/tokens/build.ts --watch",
     "lint": "biome check .",
     "check-types": "tsc --noEmit",
     "test": "vitest",
