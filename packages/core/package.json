@@ -18,10 +18,7 @@
     "check-types": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "test:browser": "BROWSER_TEST=true vitest",
-    "test:visual": "BROWSER_TEST=true vitest run src/components/**/*.visual.test.tsx",
-    "test:visual:update": "BROWSER_TEST=true vitest run src/components/**/*.visual.test.tsx --update"
+    "test:coverage": "vitest --coverage"
   },
   "peerDependencies": {
     "react": "^19.2.0",
