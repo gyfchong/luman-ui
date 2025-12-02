@@ -1,0 +1,72 @@
+# @repo/react
+
+React component library with tree-shakeable components built on Base-UI.
+
+## Features
+
+- 🌳 **Tree-shakeable**: Import only the components you need
+- ♿ **Accessible**: Built on Base-UI with accessibility testing
+- 🧪 **Well-tested**: Comprehensive test coverage with Vitest
+- 📦 **TypeScript**: Full TypeScript support with type definitions
+- 🎨 **Unstyled**: Start with no styling, add your own with Tailwind v4
+
+## Installation
+
+This package is currently private and part of the monorepo.
+
+## Usage
+
+Import individual components for optimal tree-shaking:
+
+```tsx
+import { Button } from "@repo/react/button";
+
+function App() {
+  return (
+    <Button onClick={() => console.log("clicked")}>
+      Click me
+    </Button>
+  );
+}
+```
+
+## Components
+
+### Button
+
+A button component built on Base-UI's button primitive.
+
+**Props:**
+- `children`: React.ReactNode - The content of the button
+- `disabled`: boolean - If true, the button will be disabled
+- `type`: "button" | "submit" | "reset" - The type of the button
+- `onClick`: (event: MouseEvent) => void - Click handler
+- `className`: string - Additional class name for styling
+
+**Example:**
+```tsx
+<Button type="submit" onClick={handleSubmit}>
+  Submit Form
+</Button>
+```
+
+## Development
+
+### Build
+```bash
+pnpm build
+```
+
+### Test
+```bash
+pnpm test
+```
+
+### Type Check
+```bash
+pnpm check-types
+```
+
+## License
+
+Private package
