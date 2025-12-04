@@ -1,25 +1,29 @@
 # Design Tokens System
 
-This package uses a design tokens system that auto-generates TypeScript types, Tailwind configuration, and CVA variants from a single source of truth.
+This package uses the `@luman-ui/design-tokens` system that auto-generates TypeScript types, Tailwind configuration, and CVA variants from a single source of truth.
+
+For full documentation, see the [@luman-ui/design-tokens README](../design-tokens/README.md).
 
 ## Quick Start
 
 ### Build Tokens
 
 ```bash
-# Build tokens once
+# Build tokens once (runs design-tokens build)
 pnpm build:tokens
 
 # Watch mode (auto-rebuild on changes)
 pnpm dev:tokens
 ```
 
+The token build is powered by `@luman-ui/design-tokens` CLI. Configuration is in `design-tokens.config.ts` at the package root.
+
 ### Using Generated Types in Components
 
 The Button component demonstrates the pattern:
 
 ```tsx
-import type { ButtonVariant } from '../tokens/generated/component-types.ts'
+import type { ButtonVariant } from './component-types.gen.ts'
 
 export interface ButtonProps {
   variant?: ButtonVariant  // ✅ Auto-generated: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'
@@ -78,21 +82,14 @@ No manual CVA mapping needed - everything is derived from tokens.
 
 ```
 packages/core/
+├── design-tokens.config.ts              # Design tokens config
 ├── src/
-│   ├── tokens/
-│   │   ├── design-tokens.json          # Source of truth
-│   │   ├── schema.ts                    # TypeScript schema
-│   │   ├── build.ts                     # Build script
-│   │   ├── builders/
-│   │   │   ├── generate-types.ts        # Type generator
-│   │   │   ├── generate-tailwind.ts     # Tailwind config generator
-│   │   │   └── generate-cva.ts          # CVA variants generator
-│   │   └── generated/                   # Auto-generated
-│   │       └── component-types.ts       # ✨ Generated types
+│   ├── design-tokens.json               # Source of truth
+│   ├── theme.css                        # ✨ Generated Tailwind v4 theme
 │   └── components/
+│       ├── component-types.gen.ts       # ✨ Generated types
 │       ├── button.tsx                   # Uses generated types
 │       └── button.variants.ts           # ✨ Auto-generated CVA
-└── tailwind.config.js                   # ✨ Auto-generated
 ```
 
 ## Design Tokens Format

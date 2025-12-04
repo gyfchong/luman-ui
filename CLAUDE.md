@@ -11,8 +11,7 @@ luman-ui is a Turborepo monorepo for building a React component library. The pro
 ### Build & Development
 - `pnpm build` - Build all packages and apps
 - `pnpm dev` - Start development servers for all apps
-- `pnpm lint` - Run Biome linting across all packages and apps
-- `pnpm format` - Format code with Biome
+- `pnpm lint` - Run oxlint linting across all packages and apps
 - `pnpm check-types` - Run TypeScript type checking across all packages and apps
 
 ### Working with Specific Packages
@@ -64,14 +63,13 @@ The bundler (tsdown/tsup) automatically rewrites `.ts` to `.js` in the build out
 - Node.js ESM requires explicit file extensions at runtime
 - The build tools handle the transformation automatically
 
-### Biome Configuration
-Biome is configured at the workspace root (`biome.json`) and handles both linting and formatting:
-- Uses recommended rules for linting
-- Formats with 2-space indentation, 100-character line width
-- Double quotes, semicolons as needed, ES5 trailing commas
-- VCS integration enabled with git ignore file support
+### oxlint Configuration
+oxlint is configured at the workspace root (`.oxlintrc.json`) for fast linting:
+- Uses correctness and suspicious rules as errors
+- Performance rules as warnings
+- Ignores node_modules, dist, .output, .next, and generated files
 
-All packages use the shared Biome configuration.
+All packages use the shared oxlint configuration.
 
 ### Turborepo Pipeline
 Configured in `turbo.json`:
@@ -111,7 +109,7 @@ The repository is in early development:
 ### Adding New Components
 When adding components:
 1. Create component files in `apps/docs/registry/default/ui/` (or `lib/`, `hooks/`, `blocks/`)
-2. Follow existing TypeScript and Biome configurations
+2. Follow existing TypeScript and oxlint configurations
 3. Test components in the docs app with `pnpm dev --filter=docs`
 4. Add corresponding metadata in `registry/items/` with:
    - Component dependencies (npm packages)

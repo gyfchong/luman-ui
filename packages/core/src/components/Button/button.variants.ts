@@ -1,17 +1,25 @@
-import { cva } from 'class-variance-authority'
-
 /**
- * Auto-generated CVA variants for button
+ * Auto-generated variant classes for button
  * DO NOT EDIT MANUALLY
  *
  * Generated from design-tokens.json
+ *
+ * Usage in your component:
+ * ```tsx
+ * import { cva } from 'class-variance-authority'
+ * import { buttonVariantClasses } from './Button.variants.ts'
+ *
+ * const buttonVariants = cva(
+ *   'your-base-classes-here', // Define your own base classes
+ *   {
+ *     variants: buttonVariantClasses,
+ *     defaultVariants: { variant: 'primary' }
+ *   }
+ * )
+ * ```
  */
-export const buttonVariants = cva(
-  // Base classes
-  'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-base font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50',
-  {
-    variants: {
-      variant: {
+export const buttonVariantClasses = {
+  variant: {
         primary: [
           'bg-button-primary-background-default',
           'hover:bg-button-primary-background-hover',
@@ -42,14 +50,7 @@ export const buttonVariants = cva(
           'text-button-destructive-text',
           'border border-button-destructive-border'
         ]
-      }
-    },
-    defaultVariants: {
-      variant: 'primary'
-    }
   }
-)
+} as const
 
-export type ButtonVariantProps = {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'
-}
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'

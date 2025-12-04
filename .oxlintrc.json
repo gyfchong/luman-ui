@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "ignore": [
+    "node_modules",
+    "dist",
+    ".output",
+    ".next",
+    "*.gen.ts",
+    "*.generated.ts"
+  ]
+}

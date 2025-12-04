@@ -1,4 +1,5 @@
-import type { DesignTokens } from '../schema.ts'
+import type { DesignTokens } from "../schema.ts";
+import { toPascalCase, toConstantCase } from "../utils/formatting.ts";
 
 export function generateComponentTypes(tokens: DesignTokens): string {
   const lines: string[] = []
@@ -53,16 +54,5 @@ export function generateComponentTypes(tokens: DesignTokens): string {
     }
   }
 
-  return lines.join('\n')
-}
-
-function toPascalCase(str: string): string {
-  return str
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('')
-}
-
-function toConstantCase(str: string): string {
-  return str.toUpperCase().replace(/-/g, '_')
+  return lines.join("\n");
 }
