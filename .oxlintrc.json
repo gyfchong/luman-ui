@@ -7,12 +7,5 @@
     "typescript/no-explicit-any": "error",
     "typescript/no-unsafe-call": "error"
   },
-  "ignore": [
-    "node_modules",
-    "dist",
-    ".output",
-    ".next",
-    "*.gen.ts",
-    "*.generated.ts"
-  ]
+  "ignore": ["node_modules", "dist", "*.gen.ts", "*.generated.ts"]
 }
