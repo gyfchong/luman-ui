@@ -6,13 +6,13 @@ import { build } from "./build.ts";
  * Watch tokens file and rebuild on changes
  */
 export async function watch(config: ResolvedConfigWithPaths): Promise<void> {
-  console.log(`👀 Watching for changes to ${config.inputPath}...\n`);
+  console.log(`👀 Watching for changes to ${config.tokenSchemaPath}...\n`);
 
   // Initial build
   await build(config);
 
   // Watch for changes
-  const watcher = chokidarWatch(config.inputPath, {
+  const watcher = chokidarWatch(config.tokenSchemaPath, {
     persistent: true,
     ignoreInitial: true,
   });

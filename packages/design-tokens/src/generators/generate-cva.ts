@@ -1,9 +1,8 @@
-import type { DesignTokens } from "../schema.ts";
-import { toPascalCase, toCamelCase } from "../utils/formatting.ts";
-import type { CVAOutputConfig } from "../config.ts";
+import type { DesignTokens, ComponentVariantTokens } from "../schema.ts"
+import { toPascalCase, toCamelCase } from "../utils/formatting.ts"
 
 interface CVAVariantClasses {
-  [variantName: string]: string[];
+  [variantName: string]: string[]
 }
 
 /**
@@ -11,14 +10,17 @@ interface CVAVariantClasses {
  */
 export function generateCVA(
   tokens: DesignTokens,
-  config: Required<CVAOutputConfig>,
+  config: { propertyMapping: Record<string, string> }
 ): Map<string, string> {
-  const cvaFiles = new Map<string, string>();
+  const cvaFiles = new Map<string, string>()
 
-  for (const [componentName, componentConfig] of Object.entries(tokens.component)) {
+  for (const [componentName, componentConfig] of Object.entries(
+    tokens.component
+  )) {
     // Check if component has variants
-    const hasVariant = "variant" in componentConfig && componentConfig.variant !== undefined;
-    const isCompound = !hasVariant;
+    const hasVariant =
+      "variant" in componentConfig && componentConfig.variant !== undefined
+    const isCompound = !hasVariant
 
     if (isCompound) {
       // Handle compound components (e.g., popover with trigger, popup parts)
@@ -29,15 +31,14 @@ export function generateCVA(
           "variant" in partConfig &&
           partConfig.variant
         ) {
-          const fullName = `${componentName}-${partName}`;
+          const fullName = `${componentName}-${partName}`
           const cvaCode = generateCVAForComponent(
             fullName,
-            partConfig.variant,
-            partConfig,
-            config,
-          );
+            partConfig.variant as ComponentVariantTokens,
+            config
+          )
           if (cvaCode) {
-            cvaFiles.set(fullName, cvaCode);
+            cvaFiles.set(fullName, cvaCode)
           }
         }
       }
@@ -46,29 +47,27 @@ export function generateCVA(
       const cvaCode = generateCVAForComponent(
         componentName,
         componentConfig.variant,
-        componentConfig,
-        config,
-      );
+        config
+      )
       if (cvaCode) {
-        cvaFiles.set(componentName, cvaCode);
+        cvaFiles.set(componentName, cvaCode)
       }
     }
   }
 
-  return cvaFiles;
+  return cvaFiles
 }
 
 function generateCVAForComponent(
   componentName: string,
-  variants: Record<string, any>,
-  tokenMetadata: any,
-  config: Required<CVAOutputConfig>,
+  variants: ComponentVariantTokens,
+  config: { propertyMapping: Record<string, string> }
 ): string | null {
-  const variantClasses: CVAVariantClasses = {};
+  const variantClasses: CVAVariantClasses = {}
 
   // Build class strings for each variant
   for (const [variantName, variantTokens] of Object.entries(variants)) {
-    const classes: string[] = [];
+    const classes: string[] = []
 
     for (const [property, propertyValue] of Object.entries(variantTokens)) {
       // Handle nested states (default, hover, etc.)
@@ -78,58 +77,66 @@ function generateCVAForComponent(
         !("$value" in propertyValue)
       ) {
         for (const [state, stateToken] of Object.entries(propertyValue)) {
-          if (typeof stateToken === "object" && stateToken !== null && "$value" in stateToken) {
-            const className = `${componentName}-${variantName}-${property}-${state}`;
-            const pseudoClass = getPseudoClass(state);
+          if (
+            typeof stateToken === "object" &&
+            stateToken !== null &&
+            "$value" in stateToken
+          ) {
+            const className = `${componentName}-${variantName}-${property}-${state}`
+            const pseudoClass = getPseudoClass(state)
 
             // Get the Tailwind prefix for this property
-            const prefix = config.propertyMapping[property];
+            const prefix = config.propertyMapping[property]
             if (prefix) {
               if (pseudoClass) {
-                classes.push(`${pseudoClass}:${prefix}-${className}`);
+                classes.push(`${pseudoClass}:${prefix}-${className}`)
               } else {
                 // Special handling for border which needs the border class
                 if (property === "border") {
-                  classes.push(`border ${prefix}-${className}`);
+                  classes.push(`border ${prefix}-${className}`)
                 } else {
-                  classes.push(`${prefix}-${className}`);
+                  classes.push(`${prefix}-${className}`)
                 }
               }
             }
           }
         }
-      } else if (typeof propertyValue === "object" && propertyValue !== null && "$value" in propertyValue) {
+      } else if (
+        typeof propertyValue === "object" &&
+        propertyValue !== null &&
+        "$value" in propertyValue
+      ) {
         // Simple property without states
-        const className = `${componentName}-${variantName}-${property}`;
+        const className = `${componentName}-${variantName}-${property}`
 
         // Get the Tailwind prefix for this property
-        const prefix = config.propertyMapping[property];
+        const prefix = config.propertyMapping[property]
         if (prefix) {
           // Special handling for border which needs the border class
           if (property === "border") {
-            classes.push(`border ${prefix}-${className}`);
+            classes.push(`border ${prefix}-${className}`)
           } else {
-            classes.push(`${prefix}-${className}`);
+            classes.push(`${prefix}-${className}`)
           }
         }
       }
     }
 
-    variantClasses[variantName] = classes;
+    variantClasses[variantName] = classes
   }
 
   // Generate the CVA code
-  const variantNames = Object.keys(variantClasses);
-  const firstVariant = variantNames[0] || "primary";
+  const variantNames = Object.keys(variantClasses)
+  const firstVariant = variantNames[0] || "primary"
 
   const variantsCode = variantNames
     .map((name) => {
-      const classes = variantClasses[name] || [];
-      return `        ${name}: [\n          '${classes.join("',\n          '")}'\n        ]`;
+      const classes = variantClasses[name] || []
+      return `        ${name}: [\n          '${classes.join("',\n          '")}'\n        ]`
     })
-    .join(",\n");
+    .join(",\n")
 
-  const pascalName = toPascalCase(componentName);
+  const pascalName = toPascalCase(componentName)
 
   return `/**
  * Auto-generated variant classes for ${componentName}
@@ -158,7 +165,7 @@ ${variantsCode}
 } as const
 
 export type ${pascalName}Variant = ${variantNames.map((v) => `'${v}'`).join(" | ")}
-`;
+`
 }
 
 function getPseudoClass(state: string): string | null {
@@ -168,6 +175,6 @@ function getPseudoClass(state: string): string | null {
     focus: "focus",
     disabled: "disabled",
     open: "data-[popup-open]",
-  };
-  return stateMap[state] || null;
+  }
+  return stateMap[state] || null
 }

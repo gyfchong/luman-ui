@@ -1,82 +1,58 @@
-import { cosmiconfigSync } from "cosmiconfig";
-import { createJiti } from "jiti";
-import { defu } from "defu";
-import type { PathContext } from "./utils/paths.ts";
-import { createPathContext, resolveInputPath, resolveOutputPath } from "./utils/paths.ts";
-
-/**
- * Configuration for TypeScript types output
- */
-export interface TypesOutputConfig {
-  enabled?: boolean;
-  path?: string;
-}
-
-/**
- * Configuration for Tailwind v4 CSS theme output
- */
-export interface TailwindOutputConfig {
-  enabled?: boolean;
-  path?: string;
-}
-
-/**
- * Configuration for CVA variants output
- */
-export interface CVAOutputConfig {
-  enabled?: boolean;
-  /**
-   * Base directory for component folders. Variant files will be generated at:
-   * `{path}/{ComponentName}/{componentName}.variants.ts`
-   *
-   * NOTE: Component directories must already exist. The script will NOT create them.
-   * Create component directories first, then run the build.
-   *
-   * Example with path: "src/components":
-   * - src/components/Button/ (you create this)
-   *   └── button.variants.ts (script generates this)
-   * - src/components/Input/ (you create this)
-   *   └── input.variants.ts (script generates this)
-   */
-  path?: string;
-  propertyMapping?: {
-    [property: string]: string;
-  };
-}
-
-/**
- * Output configuration
- */
-export interface OutputsConfig {
-  types?: TypesOutputConfig;
-  tailwind?: TailwindOutputConfig;
-  cva?: CVAOutputConfig;
-}
+import { cosmiconfig } from "cosmiconfig"
+import { createJiti } from "jiti"
+import { defu } from "defu"
+import { resolve, isAbsolute } from "node:path"
 
 /**
  * User configuration (what users write in config files)
  */
 export interface DesignTokensConfig {
   /**
-   * Path to the input tokens JSON file
+   * Path to design tokens JSON file (relative to project root)
+   * @default "src/design-tokens.json"
    */
-  input?: string;
+  tokenSchema?: string
+
   /**
-   * Output configurations
+   * Style system for theme generation
+   * @default "tailwind"
    */
-  outputs?: OutputsConfig;
+  styleSystem?: "tailwind"
+
+  /**
+   * Output file paths
+   */
+  outputs?: {
+    /**
+     * CSS output file path (relative to project root)
+     * @default "src/tailwind.css"
+     */
+    css?: string
+
+    /**
+     * Components directory for types and variants (relative to project root)
+     * Generates:
+     * - `{components}/component-types.ts` - TypeScript component types
+     * - `{components}/{ComponentName}/{componentName}.variants.ts` - CVA variants
+     * @default "src/components"
+     */
+    components?: string
+  }
 }
 
 /**
  * Fully resolved configuration with all defaults applied
  */
 export interface ResolvedConfig {
-  input: string;
+  tokenSchema: string
+  styleSystem: "tailwind"
   outputs: {
-    types: Required<TypesOutputConfig>;
-    tailwind: Required<TailwindOutputConfig>;
-    cva: Required<CVAOutputConfig>;
-  };
+    css: string
+    components: string
+  }
+  cva: {
+    propertyMapping: Record<string, string>
+  }
 }
 
 /**
@@ -84,53 +60,54 @@ export interface ResolvedConfig {
  */
 export interface ResolvedConfigWithPaths extends ResolvedConfig {
   /**
-   * Absolute path to input file
+   * Absolute path to token schema file
    */
-  inputPath: string;
+  tokenSchemaPath: string
   /**
-   * Path context for resolving relative paths
+   * Absolute path to CSS output file
    */
-  pathContext: PathContext;
+  cssOutputPath: string
+  /**
+   * Absolute path to components directory
+   */
+  componentDirPath: string
+  /**
+   * Absolute path to component types file (pre-computed)
+   */
+  componentTypesPath: string
 }
 
 /**
  * Default configuration
  */
 const DEFAULT_CONFIG: ResolvedConfig = {
-  input: "design-tokens.json",
+  tokenSchema: "src/design-tokens.json",
+  styleSystem: "tailwind",
   outputs: {
-    types: {
-      enabled: true,
-      path: "generated/component-types.ts",
-    },
-    tailwind: {
-      enabled: true,
-      path: "src/app.css",
-    },
-    cva: {
-      enabled: true,
-      path: "components",
-      propertyMapping: {
-        background: "bg",
-        text: "text",
-        border: "border",
-      },
+    css: "src/tailwind.css",
+    components: "src/components",
+  },
+  cva: {
+    propertyMapping: {
+      background: "bg",
+      text: "text",
+      border: "border",
     },
   },
-};
+}
 
 /**
  * Helper for defining config with TypeScript autocomplete
  */
 export function defineConfig(config: DesignTokensConfig): DesignTokensConfig {
-  return config;
+  return config
 }
 
 /**
  * Load and resolve configuration
  */
-export function loadConfig(configPath?: string): ResolvedConfig {
-  const explorer = cosmiconfigSync("design-tokens", {
+export async function loadConfig(configPath?: string): Promise<ResolvedConfig> {
+  const explorer = cosmiconfig("design-tokens", {
     searchPlaces: [
       "design-tokens.config.ts",
       "design-tokens.config.js",
@@ -139,70 +116,67 @@ export function loadConfig(configPath?: string): ResolvedConfig {
       ".designtokensrc.json",
     ],
     loaders: {
-      ".ts": (filepath) => {
+      ".ts": async (filepath) => {
         // Use jiti to load TypeScript config files
-        const jiti = createJiti(filepath, {
+        const jiti = createJiti(import.meta.url, {
           interopDefault: true,
-          esmResolve: true,
-        });
-        const loaded = jiti(filepath);
+        })
+        const loaded = await jiti.import(filepath) as { default?: DesignTokensConfig } | DesignTokensConfig
         // Handle both default and named exports
-        return loaded?.default || loaded;
+        return loaded && typeof loaded === "object" && "default" in loaded
+          ? loaded.default
+          : loaded
       },
     },
-  });
+  })
 
-  let result;
+  let result
   if (configPath) {
     // Load specific config file
-    result = explorer.load(configPath);
+    result = await explorer.load(configPath)
   } else {
     // Search for config
-    result = explorer.search();
+    result = await explorer.search()
   }
 
-  const userConfig = (result?.config as DesignTokensConfig) || {};
+  const userConfig = (result?.config as DesignTokensConfig | undefined) || {}
 
-  // Merge with defaults
-  const merged = defu(userConfig, DEFAULT_CONFIG) as ResolvedConfig;
-
-  return merged;
+  // Simple merge with defaults
+  const config = defu(userConfig, DEFAULT_CONFIG) as ResolvedConfig
+  return config
 }
 
 /**
  * Load config and resolve all paths to absolute paths
  */
-export function loadConfigWithPaths(configPath?: string): ResolvedConfigWithPaths {
-  const config = loadConfig(configPath);
-  const pathContext = createPathContext(configPath);
+export async function loadConfigWithPaths(
+  configPath?: string
+): Promise<ResolvedConfigWithPaths> {
+  // Load config (handles all validation and defaults)
+  const config = await loadConfig(configPath)
 
-  // Resolve input path
-  const inputPath = resolveInputPath(config.input, pathContext);
+  const cwd = process.cwd()
+
+  // Resolve all paths relative to cwd
+  const tokenSchemaPath = isAbsolute(config.tokenSchema)
+    ? config.tokenSchema
+    : resolve(cwd, config.tokenSchema)
+
+  const cssOutputPath = isAbsolute(config.outputs.css)
+    ? config.outputs.css
+    : resolve(cwd, config.outputs.css)
+
+  const componentDirPath = isAbsolute(config.outputs.components)
+    ? config.outputs.components
+    : resolve(cwd, config.outputs.components)
+
+  const componentTypesPath = resolve(componentDirPath, "component-types.gen.ts")
 
   return {
     ...config,
-    inputPath,
-    pathContext,
-  };
-}
-
-/**
- * Get absolute path for types output
- */
-export function getTypesOutputPath(config: ResolvedConfigWithPaths): string {
-  return resolveOutputPath(config.outputs.types.path, config.pathContext);
-}
-
-/**
- * Get absolute path for Tailwind output
- */
-export function getTailwindOutputPath(config: ResolvedConfigWithPaths): string {
-  return resolveOutputPath(config.outputs.tailwind.path, config.pathContext);
-}
-
-/**
- * Get absolute path for CVA output (directory)
- */
-export function getCVAOutputPath(config: ResolvedConfigWithPaths): string {
-  return resolveOutputPath(config.outputs.cva.path, config.pathContext);
+    tokenSchemaPath,
+    cssOutputPath,
+    componentDirPath,
+    componentTypesPath,
+  }
 }

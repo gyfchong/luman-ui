@@ -1,16 +1,10 @@
-import { defineConfig } from "@luman-ui/design-tokens";
+import { defineConfig } from "@luman-ui/design-tokens"
 
 export default defineConfig({
-  input: "src/design-tokens.json",
+  tokenSchema: "src/design-tokens.json",
+  styleSystem: "tailwind",
   outputs: {
-    types: {
-      path: "src/components/component-types.gen.ts",
-    },
-    tailwind: {
-      path: "src/theme.css",
-    },
-    cva: {
-      path: "src/components",
-    },
+    css: "src/tailwind.css",
+    components: "src/components",
   },
-});
+})

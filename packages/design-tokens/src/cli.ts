@@ -27,11 +27,11 @@ const buildCommand = defineCommand({
   },
   async run({ args }) {
     try {
-      const config = loadConfigWithPaths(args.config);
+      const config = await loadConfigWithPaths(args.config);
 
       // Check if input file exists
-      if (!existsSync(config.inputPath)) {
-        console.error(colors.red(`❌ Token file not found: ${config.inputPath}`));
+      if (!existsSync(config.tokenSchemaPath)) {
+        console.error(colors.red(`❌ Token file not found: ${config.tokenSchemaPath}`));
         console.log(
           `\nCreate a ${colors.cyan("design-tokens.json")} file or run ${colors.cyan("design-tokens init")}`,
         );
@@ -62,7 +62,8 @@ const initCommand = defineCommand({
   async run() {
     const cwd = process.cwd();
     const configPath = resolve(cwd, "design-tokens.config.ts");
-    const tokensPath = resolve(cwd, "design-tokens.json");
+    const tokensPath = resolve(cwd, "src/design-tokens.json");
+    const srcDir = resolve(cwd, "src");
 
     // Check if config already exists
     if (existsSync(configPath)) {
@@ -70,26 +71,30 @@ const initCommand = defineCommand({
       return;
     }
 
-    // Create config file
+    // Ensure src directory exists
+    if (!existsSync(srcDir)) {
+      console.error(colors.red(`❌ src directory not found: ${srcDir}`));
+      console.log(`\nCreate the ${colors.cyan("src/")} directory first, or adjust the rootDir in your config.`);
+      return;
+    }
+
+    // Create config file (optional - defaults work out of the box)
     const configContent = `import { defineConfig } from "@luman-ui/design-tokens";
 
 export default defineConfig({
-  input: "design-tokens.json",
+  // Path to design tokens JSON file (default: "src/design-tokens.json")
+  tokenSchema: "src/design-tokens.json",
+
+  // Style system for theme generation (default: "tailwind")
+  styleSystem: "tailwind",
+
+  // Output file paths
   outputs: {
-    types: {
-      path: "generated/component-types.ts",
-    },
-    tailwind: {
-      path: "src/app.css", // Tailwind v4 CSS theme file
-    },
-    cva: {
-      path: "components",
-      baseClasses: {
-        default: "inline-flex items-center justify-center",
-        // Add component-specific base classes here
-        // button: "inline-flex items-center gap-2 rounded-md px-4 py-2 ...",
-      },
-    },
+    // CSS output file path (default: "src/tailwind.css")
+    css: "src/tailwind.css",
+
+    // Components directory for types and variants (default: "src/components")
+    components: "src/components",
   },
 });
 `;
@@ -128,9 +133,12 @@ export default defineConfig({
     }
 
     console.log(`\n${colors.bold("Next steps:")}`);
-    console.log(`  1. Edit ${colors.cyan("design-tokens.json")} to define your tokens`);
-    console.log(`  2. Run ${colors.cyan("design-tokens build")} to generate outputs`);
-    console.log(`  3. Import ${colors.cyan("src/app.css")} in your main CSS/entry point`);
+    console.log(`  1. Edit ${colors.cyan("src/design-tokens.json")} to define your design tokens`);
+    console.log(`  2. Run ${colors.cyan("design-tokens build")} to generate outputs:`);
+    console.log(`     - ${colors.dim("src/components/component-types.ts")} (TypeScript types)`);
+    console.log(`     - ${colors.dim("src/components/*/*.variants.ts")} (CVA variant classes)`);
+    console.log(`     - ${colors.dim("src/tailwind.css")} (Tailwind v4 theme)`);
+    console.log(`  3. Import ${colors.cyan("src/tailwind.css")} in your main CSS/entry point`);
     console.log(`  4. Run ${colors.cyan("design-tokens build --watch")} for development\n`);
   },
 });

@@ -3,7 +3,9 @@
   "rules": {
     "correctness": "error",
     "suspicious": "error",
-    "perf": "warn"
+    "perf": "warn",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-unsafe-call": "error"
   },
   "ignore": [
     "node_modules",

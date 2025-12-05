@@ -81,11 +81,11 @@ function resolveTokenValue(value: string, tokens: DesignTokens): string {
   // Check if it's a reference (e.g., "{color.brand.600}")
   if (typeof value === 'string' && value.startsWith('{') && value.endsWith('}')) {
     const path = value.slice(1, -1).split('.')
-    let current: any = tokens
+    let current: DesignTokens | Record<string, object> = tokens
 
     for (const segment of path) {
       if (current && typeof current === 'object' && segment in current) {
-        current = current[segment]
+        current = (current as Record<string, object>)[segment] as Record<string, object>
       } else {
         // Can't resolve, return as-is
         return value
@@ -94,7 +94,10 @@ function resolveTokenValue(value: string, tokens: DesignTokens): string {
 
     // If we found a token, get its $value
     if (current && typeof current === 'object' && '$value' in current) {
-      return resolveTokenValue(current.$value, tokens)
+      const token = current as { $value: string }
+      if (typeof token.$value === 'string') {
+        return resolveTokenValue(token.$value, tokens)
+      }
     }
 
     return value

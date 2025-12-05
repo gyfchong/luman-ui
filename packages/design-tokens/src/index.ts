@@ -15,23 +15,12 @@ export {
   loadConfig,
   loadConfigWithPaths,
   defineConfig,
-  getTypesOutputPath,
-  getTailwindOutputPath,
-  getCVAOutputPath,
 } from "./config.ts";
 export type {
   DesignTokensConfig,
   ResolvedConfig,
   ResolvedConfigWithPaths,
-  TypesOutputConfig,
-  TailwindOutputConfig,
-  CVAOutputConfig,
-  OutputsConfig,
 } from "./config.ts";
-
-// Path utilities
-export { createPathContext, resolveInputPath, resolveOutputPath } from "./utils/paths.ts";
-export type { PathContext } from "./utils/paths.ts";
 
 // Generators (for advanced usage)
 export { generateComponentTypes } from "./generators/generate-types.ts";
@@ -58,24 +47,34 @@ export { toPascalCase, toCamelCase, toConstantCase } from "./utils/formatting.ts
  *
  * @example
  * ```typescript
- * import { buildTokens, defineConfig } from '@luman-ui/design-tokens'
+ * import { buildTokens } from '@luman-ui/design-tokens'
  *
- * const config = defineConfig({
- *   input: 'tokens.json',
+ * // Build with default config
+ * await buildTokens()
+ *
+ * // Or specify custom config path
+ * await buildTokens('./custom-config.ts')
+ * ```
+ *
+ * @example
+ * Example config file (design-tokens.config.ts):
+ * ```typescript
+ * import { defineConfig } from '@luman-ui/design-tokens'
+ *
+ * export default defineConfig({
+ *   tokenSchema: 'src/design-tokens.json',
+ *   styleSystem: 'tailwind',
  *   outputs: {
- *     types: { path: 'generated/types.ts' },
- *     tailwind: { path: 'tailwind.config.js' },
- *     cva: { path: 'components' }
+ *     css: 'src/tailwind.css',
+ *     components: 'src/components'
  *   }
  * })
- *
- * await buildTokens(config)
  * ```
  */
 export async function buildTokens(configPath?: string) {
   const { loadConfigWithPaths } = await import("./config.ts");
   const { build } = await import("./core/build.ts");
 
-  const config = loadConfigWithPaths(configPath);
+  const config = await loadConfigWithPaths(configPath);
   return await build(config);
 }
