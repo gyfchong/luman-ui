@@ -7,11 +7,13 @@
     "build:registry:watch": "tsx watch scripts/build-registry.ts",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "biome format --write .",
-    "check-types": "turbo run check-types"
+    "check-types": "turbo run check-types",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\""
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.8",
+    "oxlint": "^1.31.0",
+    "prettier": "^3.7.4",
     "tsx": "^4.21.0",
     "turbo": "^2.6.1",
     "typescript": "5.9.3"

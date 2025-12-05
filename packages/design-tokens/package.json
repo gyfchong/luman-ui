@@ -1,0 +1,36 @@
+{
+  "name": "@luman-ui/design-tokens",
+  "version": "0.1.0",
+  "description": "Design tokens build system for generating TypeScript types, Tailwind config, and CVA variants from W3C Design Tokens",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "design-tokens": "./dist/cli.mjs"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "oxlint .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "citty": "^0.1.6",
+    "cosmiconfig": "^9.0.0",
+    "defu": "^6.1.4",
+    "jiti": "^2.4.2",
+    "chokidar": "^4.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsdown": "^0.16.8",
+    "typescript": "5.9.2"
+  }
+}

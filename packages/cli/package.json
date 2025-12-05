@@ -1,5 +1,5 @@
 {
-  "name": "@repo/cli",
+  "name": "@luman-ui/cli",
   "version": "0.1.0",
   "description": "AI-native design system CLI",
   "private": true,
@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "lint": "biome check .",
+    "lint": "oxlint .",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

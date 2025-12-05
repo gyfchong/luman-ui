@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown"
 
 export default defineConfig({
-  entry: ["src/components/button.tsx"],
+  entry: ["src/components/Button/Button.tsx"],
   format: ["esm"],
   dts: true,
   clean: true,
