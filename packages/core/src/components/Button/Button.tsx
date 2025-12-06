@@ -1,11 +1,13 @@
 import * as React from "react";
 import {
   Button as BaseButton,
-  type ButtonProps,
+  type ButtonProps as BaseButtonProps,
 } from "@base-ui-components/react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../utils/cn.ts";
 import { buttonVariantClasses, type ButtonVariant } from "./button.variants.ts";
+
+export type ButtonProps = BaseButtonProps;
 
 /**
  * Button variants with component-specific base classes
@@ -38,12 +40,12 @@ const buttonVariants = cva(
  * ```
  */
 export const Button: React.ForwardRefExoticComponent<
-  ButtonProps & {
+  BaseButtonProps & {
     variant?: ButtonVariant;
   }
 > = React.forwardRef<
   HTMLButtonElement,
-  ButtonProps & { variant?: ButtonVariant }
+  BaseButtonProps & { variant?: ButtonVariant }
 >(({ variant = "primary", className, children, ...props }, ref) => {
   return (
     <BaseButton

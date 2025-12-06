@@ -1,13 +1,13 @@
 {
-  "name": "@luman-ui/core",
+  "name": "@luman-ui/components",
   "version": "0.1.0",
   "description": "React component library with tree-shakeable components",
   "private": true,
   "type": "module",
   "exports": {
-    "./button": {
-      "types": "./dist/Button.d.mts",
-      "import": "./dist/Button.mjs"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./package.json": "./package.json"
   },
