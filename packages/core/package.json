@@ -9,8 +9,8 @@
       "types": "./dist/components/index.d.mts",
       "import": "./dist/components/index.mjs"
     },
-    "./theme.css": {
-      "default": "./dist/theme.css"
+    "./luman-tailwind.css": {
+      "default": "./dist/luman-tailwind.css"
     },
     "./use-theme": {
       "types": "./dist/utils/use-theme.d.mts",
@@ -19,7 +19,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "pnpm build:tokens && tsdown && cp src/tailwind.css dist/theme.css",
+    "build": "pnpm build:tokens && tsdown && cp src/tailwind.css dist/luman-tailwind.css",
     "build:tokens": "design-tokens build",
     "dev": "pnpm dev:tokens & tsdown --watch",
     "dev:tokens": "design-tokens build --watch",
