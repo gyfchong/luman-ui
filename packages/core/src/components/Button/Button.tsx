@@ -1,19 +1,19 @@
-import * as React from "react";
+import * as React from "react"
 import {
   Button as BaseButton,
   type ButtonProps as BaseButtonProps,
-} from "@base-ui-components/react";
-import { cva } from "class-variance-authority";
-import { cn } from "../../utils/cn.ts";
-import { buttonVariantClasses, type ButtonVariant } from "./button.variants.ts";
+} from "@base-ui-components/react"
+import { cva } from "class-variance-authority"
+import { cn } from "../../utils/cn.ts"
+import { buttonVariantClasses, type ButtonVariant } from "./button.variants.ts"
 
-export type ButtonProps = BaseButtonProps;
+export type ButtonProps = BaseButtonProps
 
 /**
  * Button variants with component-specific base classes
  * Base classes are defined here, variant styling comes from design tokens
  */
-const buttonVariants = cva(
+export const buttonVariants = cva(
   // Base classes - structural and interactive styles defined by the component
   "inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-base font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
@@ -23,7 +23,7 @@ const buttonVariants = cva(
       variant: "primary",
     },
   }
-);
+)
 
 /**
  * Button component built on Base-UI with design token variants
@@ -41,7 +41,7 @@ const buttonVariants = cva(
  */
 export const Button: React.ForwardRefExoticComponent<
   BaseButtonProps & {
-    variant?: ButtonVariant;
+    variant?: ButtonVariant
   }
 > = React.forwardRef<
   HTMLButtonElement,
@@ -55,7 +55,7 @@ export const Button: React.ForwardRefExoticComponent<
     >
       {children}
     </BaseButton>
-  );
-});
+  )
+})
 
-Button.displayName = "Button";
+Button.displayName = "Button"
