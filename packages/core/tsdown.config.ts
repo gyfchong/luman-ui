@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown"
 
 export default defineConfig({
-  entry: ["src/components/index.ts"],
+  entry: ["src/components/index.ts", "src/utils/use-theme.ts"],
   format: ["esm"],
   dts: true,
   clean: true,

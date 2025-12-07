@@ -17,6 +17,9 @@ export function generateCVA(
   for (const [componentName, componentConfig] of Object.entries(
     tokens.component
   )) {
+    // Skip metadata properties
+    if (componentName.startsWith('$')) continue
+
     // Check if component has variants
     const hasVariant =
       "variant" in componentConfig && componentConfig.variant !== undefined

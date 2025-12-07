@@ -16,6 +16,9 @@ export function generateComponentTypes(tokens: DesignTokens): string {
   const components = tokens.component
 
   for (const [componentName, componentConfig] of Object.entries(components)) {
+    // Skip metadata properties
+    if (componentName.startsWith('$')) continue
+
     // Check if it's a compound component (has parts like popover.trigger)
     const hasVariant = 'variant' in componentConfig && componentConfig.variant !== undefined
     const isCompound = !hasVariant
