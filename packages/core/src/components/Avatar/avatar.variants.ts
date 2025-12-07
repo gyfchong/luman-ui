@@ -21,16 +21,16 @@
 export const avatarVariantClasses = {
   variant: {
         default: [
-          'bg-avatar-default-background-default',
-          'hover:bg-avatar-default-background-hover',
-          'text-avatar-default-text',
-          'border border-avatar-default-border'
+          'bg-gray-200',
+          'hover:bg-gray-200',
+          'text-gray-600',
+          'border border-transparent'
         ],
         primary: [
-          'bg-avatar-primary-background-default',
-          'hover:bg-avatar-primary-background-hover',
-          'text-avatar-primary-text',
-          'border border-avatar-primary-border'
+          'bg-blue-100',
+          'hover:bg-blue-100',
+          'text-blue-700',
+          'border border-transparent'
         ]
   }
 } as const

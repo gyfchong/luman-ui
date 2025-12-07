@@ -21,10 +21,10 @@
 export const formVariantClasses = {
   variant: {
         default: [
-          'bg-form-default-background-default',
-          'hover:bg-form-default-background-hover',
-          'text-form-default-text',
-          'border border-form-default-border'
+          'bg-transparent',
+          'hover:bg-transparent',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

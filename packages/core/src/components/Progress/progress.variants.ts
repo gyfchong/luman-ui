@@ -21,10 +21,10 @@
 export const progressVariantClasses = {
   variant: {
         default: [
-          'bg-progress-default-background-default',
-          'hover:bg-progress-default-background-hover',
-          'text-progress-default-text',
-          'border border-progress-default-border'
+          'bg-gray-200',
+          'hover:bg-gray-200',
+          'text-blue-600',
+          'border border-transparent'
         ]
   }
 } as const

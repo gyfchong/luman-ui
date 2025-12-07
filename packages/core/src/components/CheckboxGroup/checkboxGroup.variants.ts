@@ -21,10 +21,10 @@
 export const checkboxGroupVariantClasses = {
   variant: {
         default: [
-          'bg-checkboxGroup-default-background-default',
-          'hover:bg-checkboxGroup-default-background-hover',
-          'text-checkboxGroup-default-text',
-          'border border-checkboxGroup-default-border'
+          'bg-transparent',
+          'hover:bg-transparent',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

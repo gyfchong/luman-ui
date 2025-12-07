@@ -21,16 +21,16 @@
 export const switchVariantClasses = {
   variant: {
         default: [
-          'bg-switch-default-background-default',
-          'hover:bg-switch-default-background-hover',
-          'text-switch-default-text',
-          'border border-switch-default-border'
+          'bg-gray-200',
+          'hover:bg-gray-300',
+          'text-gray-900',
+          'border border-transparent'
         ],
         primary: [
-          'bg-switch-primary-background-default',
-          'hover:bg-switch-primary-background-hover',
-          'text-switch-primary-text',
-          'border border-switch-primary-border'
+          'bg-blue-600',
+          'hover:bg-blue-700',
+          'text-white',
+          'border border-transparent'
         ]
   }
 } as const

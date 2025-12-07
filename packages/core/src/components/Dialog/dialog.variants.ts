@@ -21,10 +21,10 @@
 export const dialogVariantClasses = {
   variant: {
         default: [
-          'bg-dialog-default-background-default',
-          'hover:bg-dialog-default-background-hover',
-          'text-dialog-default-text',
-          'border border-dialog-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

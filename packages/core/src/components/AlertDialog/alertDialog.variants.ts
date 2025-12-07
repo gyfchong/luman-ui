@@ -21,10 +21,10 @@
 export const alertDialogVariantClasses = {
   variant: {
         default: [
-          'bg-alertDialog-default-background-default',
-          'hover:bg-alertDialog-default-background-hover',
-          'text-alertDialog-default-text',
-          'border border-alertDialog-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

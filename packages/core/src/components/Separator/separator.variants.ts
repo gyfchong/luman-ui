@@ -21,10 +21,10 @@
 export const separatorVariantClasses = {
   variant: {
         default: [
-          'bg-separator-default-background-default',
-          'hover:bg-separator-default-background-hover',
-          'text-separator-default-text',
-          'border border-separator-default-border'
+          'bg-gray-200',
+          'hover:bg-gray-200',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

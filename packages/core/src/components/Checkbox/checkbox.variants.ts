@@ -21,16 +21,16 @@
 export const checkboxVariantClasses = {
   variant: {
         default: [
-          'bg-checkbox-default-background-default',
-          'hover:bg-checkbox-default-background-hover',
-          'text-checkbox-default-text',
-          'border border-checkbox-default-border'
+          'bg-white',
+          'hover:bg-gray-50',
+          'text-blue-600',
+          'border border-gray-300'
         ],
         primary: [
-          'bg-checkbox-primary-background-default',
-          'hover:bg-checkbox-primary-background-hover',
-          'text-checkbox-primary-text',
-          'border border-checkbox-primary-border'
+          'bg-blue-600',
+          'hover:bg-blue-700',
+          'text-white',
+          'border border-blue-600'
         ]
   }
 } as const

@@ -6,6 +6,98 @@ interface CVAVariantClasses {
 }
 
 /**
+ * Resolve a token value to its primitive color and return the Tailwind class name
+ */
+function resolveToPrimitiveClass(
+  value: string,
+  tokens: DesignTokens,
+  property: string,
+  visited = new Set<string>()
+): string | null {
+  // Prevent infinite recursion
+  if (visited.has(value)) return null
+  visited.add(value)
+
+  // Check if it's a reference (e.g., "{color.semantic.brand.strong}")
+  if (typeof value === "string" && value.startsWith("{") && value.endsWith("}")) {
+    const path = value.slice(1, -1).split(".")
+    const token = getTokenByPath(tokens, path)
+
+    if (token?.$value) {
+      return resolveToPrimitiveClass(token.$value, tokens, property, visited)
+    }
+    return null
+  }
+
+  // We have a primitive value (hex color, etc.)
+  // Now find which primitive color this is
+  return findPrimitiveColorClass(value, tokens, property)
+}
+
+/**
+ * Find the primitive color that matches this value and return its Tailwind class
+ */
+function findPrimitiveColorClass(
+  value: string,
+  tokens: DesignTokens,
+  property: string
+): string | null {
+  // Special case: transparent
+  if (value === "transparent") {
+    return "transparent"
+  }
+
+  // Search through primitive colors to find a match
+  const primitives = tokens.color.primitive
+  for (const [colorName, colorValue] of Object.entries(primitives)) {
+    if (typeof colorValue === "object" && !("$value" in colorValue)) {
+      // This is a color scale (e.g., blue.50, blue.100, ...)
+      for (const [scale, scaleToken] of Object.entries(colorValue)) {
+        if (
+          typeof scaleToken === "object" &&
+          scaleToken !== null &&
+          "$value" in scaleToken &&
+          scaleToken.$value === value
+        ) {
+          // Found it! Return the Tailwind class for this color-scale
+          return `${colorName}-${scale}`
+        }
+      }
+    } else if (
+      typeof colorValue === "object" &&
+      "$value" in colorValue &&
+      colorValue.$value === value
+    ) {
+      // Simple color without scale (white, black, transparent)
+      return colorName
+    }
+  }
+
+  return null
+}
+
+/**
+ * Get token by path (same as in generate-tailwind.ts)
+ */
+function getTokenByPath(tokens: DesignTokens, path: string[]): any | null {
+  let current: any = tokens
+
+  for (const segment of path) {
+    if (current && typeof current === "object" && segment in current) {
+      current = current[segment]
+    } else {
+      return null
+    }
+  }
+
+  if (current && typeof current === "object" && "$value" in current) {
+    return current
+  }
+
+  return null
+}
+
+/**
  * Generates CVA (class-variance-authority) definitions from design tokens
  */
 export function generateCVA(
@@ -17,6 +109,9 @@ export function generateCVA(
   for (const [componentName, componentConfig] of Object.entries(
     tokens.component
   )) {
+    // Skip metadata properties
+    if (componentName.startsWith('$')) continue
+
     // Check if component has variants
     const hasVariant =
       "variant" in componentConfig && componentConfig.variant !== undefined
@@ -35,6 +130,7 @@ export function generateCVA(
           const cvaCode = generateCVAForComponent(
             fullName,
             partConfig.variant as ComponentVariantTokens,
+            tokens,
             config
           )
           if (cvaCode) {
@@ -47,6 +143,7 @@ export function generateCVA(
       const cvaCode = generateCVAForComponent(
         componentName,
         componentConfig.variant,
+        tokens,
         config
       )
       if (cvaCode) {
@@ -61,6 +158,7 @@ export function generateCVA(
 function generateCVAForComponent(
   componentName: string,
   variants: ComponentVariantTokens,
+  tokens: DesignTokens,
   config: { propertyMapping: Record<string, string> }
 ): string | null {
   const variantClasses: CVAVariantClasses = {}
@@ -82,20 +180,30 @@ function generateCVAForComponent(
             stateToken !== null &&
             "$value" in stateToken
           ) {
-            const className = `${componentName}-${variantName}-${property}-${state}`
             const pseudoClass = getPseudoClass(state)
 
             // Get the Tailwind prefix for this property
             const prefix = config.propertyMapping[property]
             if (prefix) {
-              if (pseudoClass) {
-                classes.push(`${pseudoClass}:${prefix}-${className}`)
-              } else {
-                // Special handling for border which needs the border class
-                if (property === "border") {
-                  classes.push(`border ${prefix}-${className}`)
+              // Resolve the token value to a Tailwind primitive class
+              const primitiveClass = resolveToPrimitiveClass(
+                stateToken.$value as string,
+                tokens,
+                property
+              )
+
+              if (primitiveClass) {
+                const utilityClass = `${prefix}-${primitiveClass}`
+
+                if (pseudoClass) {
+                  classes.push(`${pseudoClass}:${utilityClass}`)
                 } else {
-                  classes.push(`${prefix}-${className}`)
+                  // Special handling for border which needs the border class
+                  if (property === "border") {
+                    classes.push(`border ${utilityClass}`)
+                  } else {
+                    classes.push(utilityClass)
+                  }
                 }
               }
             }
@@ -107,16 +215,25 @@ function generateCVAForComponent(
         "$value" in propertyValue
       ) {
         // Simple property without states
-        const className = `${componentName}-${variantName}-${property}`
-
         // Get the Tailwind prefix for this property
         const prefix = config.propertyMapping[property]
         if (prefix) {
-          // Special handling for border which needs the border class
-          if (property === "border") {
-            classes.push(`border ${prefix}-${className}`)
-          } else {
-            classes.push(`${prefix}-${className}`)
+          // Resolve the token value to a Tailwind primitive class
+          const primitiveClass = resolveToPrimitiveClass(
+            propertyValue.$value as string,
+            tokens,
+            property
+          )
+
+          if (primitiveClass) {
+            const utilityClass = `${prefix}-${primitiveClass}`
+
+            // Special handling for border which needs the border class
+            if (property === "border") {
+              classes.push(`border ${utilityClass}`)
+            } else {
+              classes.push(utilityClass)
+            }
           }
         }
       }

@@ -21,10 +21,10 @@
 export const numberFieldVariantClasses = {
   variant: {
         default: [
-          'bg-numberField-default-background-default',
-          'hover:bg-numberField-default-background-hover',
-          'text-numberField-default-text',
-          'border border-numberField-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-300'
         ]
   }
 } as const

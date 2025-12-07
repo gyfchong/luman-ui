@@ -21,10 +21,10 @@
 export const autocompleteVariantClasses = {
   variant: {
         default: [
-          'bg-autocomplete-default-background-default',
-          'hover:bg-autocomplete-default-background-hover',
-          'text-autocomplete-default-text',
-          'border border-autocomplete-default-border'
+          'bg-white',
+          'hover:bg-gray-50',
+          'text-gray-900',
+          'border border-gray-300'
         ]
   }
 } as const

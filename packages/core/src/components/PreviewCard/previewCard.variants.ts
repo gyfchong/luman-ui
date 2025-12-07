@@ -21,10 +21,10 @@
 export const previewCardVariantClasses = {
   variant: {
         default: [
-          'bg-previewCard-default-background-default',
-          'hover:bg-previewCard-default-background-hover',
-          'text-previewCard-default-text',
-          'border border-previewCard-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

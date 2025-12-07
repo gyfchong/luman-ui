@@ -21,10 +21,10 @@
 export const sliderVariantClasses = {
   variant: {
         default: [
-          'bg-slider-default-background-default',
-          'hover:bg-slider-default-background-hover',
-          'text-slider-default-text',
-          'border border-slider-default-border'
+          'bg-gray-200',
+          'hover:bg-gray-200',
+          'text-blue-600',
+          'border border-transparent'
         ]
   }
 } as const

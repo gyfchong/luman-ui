@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { loadConfigWithPaths } from "./config.ts";
 import { build } from "./core/build.ts";
 import { watch } from "./core/watch.ts";
+import { buildTheme } from "./theme.ts";
 
 const buildCommand = defineCommand({
   meta: {
@@ -143,6 +144,39 @@ export default defineConfig({
   },
 });
 
+const themeCommand = defineCommand({
+  meta: {
+    name: "theme",
+    description: "Build custom theme from config",
+  },
+  args: {
+    config: {
+      type: "string",
+      alias: "c",
+      description: "Path to theme config file",
+      default: "theme.config.ts",
+    },
+    output: {
+      type: "string",
+      alias: "o",
+      description: "Output file path",
+      default: "src/theme.css",
+    },
+  },
+  async run({ args }) {
+    try {
+      await buildTheme({
+        config: args.config,
+        output: args.output,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(colors.red(`❌ Error: ${message}`));
+      process.exit(1);
+    }
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: "design-tokens",
@@ -152,13 +186,15 @@ const main = defineCommand({
   subCommands: {
     build: buildCommand,
     init: initCommand,
+    theme: themeCommand,
   },
   async run() {
     console.log(colors.bold("\n🎨 Design Tokens\n"));
     console.log("Generate TypeScript types, Tailwind config, and CVA variants from W3C Design Tokens\n");
     console.log("Commands:");
     console.log(`  ${colors.cyan("build")}  Build tokens and generate outputs`);
-    console.log(`  ${colors.cyan("init")}   Initialize configuration\n`);
+    console.log(`  ${colors.cyan("init")}   Initialize configuration`);
+    console.log(`  ${colors.cyan("theme")}  Build custom theme from config\n`);
     console.log("Options:");
     console.log(`  ${colors.cyan("--help")}     Show help`);
     console.log(`  ${colors.cyan("--version")}  Show version\n`);
