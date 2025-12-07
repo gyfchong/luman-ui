@@ -1,135 +1,76 @@
-# Turborepo starter
+# luman-ui
 
-This Turborepo starter is maintained by the Turborepo core team.
+Themed [Base UI](https://base-ui.com) components powered by design tokens, ready out of the box.
 
-## Using this example
+- **Tree-shakeable**: Import only the components you need
+- **Accessible**: Built on [Base UI](https://base-ui.com) primitives with ARIA compliance
+- **Design Tokens**: Styling powered by [W3C-compliant](https://www.designtokens.org/tr/2025.10/) design tokens
+- **Theme Support**: Built-in light/dark mode with `useTheme` hook
+- **TypeScript**: Full type safety with auto-generated variant types
+- **Tailwind v4**: Styled using Tailwind v4 with CSS custom properties
 
-Run the following command:
+## Installation
 
-```sh
-npx create-turbo@latest
+```bash
+pnpm add @luman-ui/core
 ```
 
-## What's inside?
+## Quick Start
 
-This Turborepo includes the following packages/apps:
+### 1. Import the CSS
 
-### Apps and Packages
+Add the theme CSS to your app's main CSS:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+```tsx
+// tailwind.css
+// @import "tailwind"
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+@source "../node_modules/@luman-ui/core";
+import "@luman-ui/core/luman-tailwind.css"
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 2. Use Components
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```tsx
+import { Button, Input, Field, Dialog } from "@luman-ui/core"
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+function App() {
+  return (
+    <Field.Root>
+      <Field.Label>Email</Field.Label>
+      <Input placeholder="you@example.com" />
+    </Field.Root>
+  )
+}
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Available Components
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+Checkout [Base UI](https://base-ui.com) for all the components, Luman UI essentially mirrors it for now.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+## Theming
 
-### Remote Caching
+Use the `useTheme` hook to toggle between light and dark modes:
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+```tsx
+import { useTheme } from "@luman-ui/core/use-theme"
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  return (
+    <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+      Toggle theme
+    </button>
+  )
+}
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Design Tokens
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+The styling system is powered by `@luman-ui/design-tokens`, a build tool that generates TypeScript types, Tailwind CSS themes, and CVA variants from W3C Design Tokens.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+See the [design-tokens documentation](./packages/design-tokens/README.md) for details on customizing tokens.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## License
 
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+MIT
