@@ -4,7 +4,7 @@ export default defineConfig({
   tokenSchema: "src/design-tokens.json",
   styleSystem: "tailwind",
   outputs: {
-    css: "src/tailwind.css",
+    css: "dist/luman-tailwind.css",
     components: "src/components",
   },
 })

@@ -19,7 +19,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "pnpm build:tokens && tsdown && cp src/tailwind.css dist/luman-tailwind.css",
+    "build": "tsdown && pnpm build:tokens",
     "build:tokens": "design-tokens build",
     "dev": "pnpm dev:tokens & tsdown --watch",
     "dev:tokens": "design-tokens build --watch",

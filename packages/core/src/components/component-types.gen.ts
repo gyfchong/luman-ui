@@ -2,7 +2,7 @@
  * Auto-generated from design-tokens.json
  * DO NOT EDIT MANUALLY
  *
- * Last updated: 2025-12-07T04:54:19.960Z
+ * Last updated: 2025-12-07T08:31:33.350Z
  */
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'
