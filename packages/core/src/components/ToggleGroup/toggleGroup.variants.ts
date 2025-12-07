@@ -21,10 +21,10 @@
 export const toggleGroupVariantClasses = {
   variant: {
         default: [
-          'bg-toggleGroup-default-background-default',
-          'hover:bg-toggleGroup-default-background-hover',
-          'text-toggleGroup-default-text',
-          'border border-toggleGroup-default-border'
+          'bg-gray-100',
+          'hover:bg-gray-100',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

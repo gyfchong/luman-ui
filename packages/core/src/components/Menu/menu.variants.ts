@@ -21,10 +21,10 @@
 export const menuVariantClasses = {
   variant: {
         default: [
-          'bg-menu-default-background-default',
-          'hover:bg-menu-default-background-hover',
-          'text-menu-default-text',
-          'border border-menu-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

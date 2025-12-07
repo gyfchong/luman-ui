@@ -21,10 +21,10 @@
 export const comboboxVariantClasses = {
   variant: {
         default: [
-          'bg-combobox-default-background-default',
-          'hover:bg-combobox-default-background-hover',
-          'text-combobox-default-text',
-          'border border-combobox-default-border'
+          'bg-white',
+          'hover:bg-gray-50',
+          'text-gray-900',
+          'border border-gray-300'
         ]
   }
 } as const

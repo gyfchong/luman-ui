@@ -21,10 +21,10 @@
 export const fieldVariantClasses = {
   variant: {
         default: [
-          'bg-field-default-background-default',
-          'hover:bg-field-default-background-hover',
-          'text-field-default-text',
-          'border border-field-default-border'
+          'bg-transparent',
+          'hover:bg-transparent',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

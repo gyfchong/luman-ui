@@ -21,16 +21,16 @@
 export const radioVariantClasses = {
   variant: {
         default: [
-          'bg-radio-default-background-default',
-          'hover:bg-radio-default-background-hover',
-          'text-radio-default-text',
-          'border border-radio-default-border'
+          'bg-white',
+          'hover:bg-gray-50',
+          'text-blue-600',
+          'border border-gray-300'
         ],
         primary: [
-          'bg-radio-primary-background-default',
-          'hover:bg-radio-primary-background-hover',
-          'text-radio-primary-text',
-          'border border-radio-primary-border'
+          'bg-blue-600',
+          'hover:bg-blue-700',
+          'text-white',
+          'border border-blue-600'
         ]
   }
 } as const

@@ -21,10 +21,10 @@
 export const accordionVariantClasses = {
   variant: {
         default: [
-          'bg-accordion-default-background-default',
-          'hover:bg-accordion-default-background-hover',
-          'text-accordion-default-text',
-          'border border-accordion-default-border'
+          'bg-transparent',
+          'hover:bg-gray-50',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

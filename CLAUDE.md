@@ -499,3 +499,30 @@ Each package should maintain:
 - Component-level JSDoc comments for props and usage
 
 The root **CLAUDE.md** (this file) serves as the source of truth for the overall project architecture and development workflow.
+
+## Troubleshooting
+
+### MODULE_NOT_FOUND error for design-tokens CLI
+
+**Error:**
+```
+Error: Cannot find module '@luman-ui/design-tokens/dist/cli.mjs'
+```
+
+**Cause**: The design-tokens package hasn't been built yet. This can happen if:
+- You run `pnpm dev` immediately after a fresh `pnpm install`
+- The `dist` folder was deleted or cleaned
+- Workspace dependencies weren't built in the correct order
+
+**Prevention**: The Turbo `dev` task has `dependsOn: ["^build"]` which ensures dependencies are built first. The `postinstall` hook also builds design-tokens automatically.
+
+**Manual Fix** (if needed):
+```bash
+# Build just design-tokens
+pnpm --filter=@luman-ui/design-tokens build
+
+# Or rebuild everything
+pnpm build
+```
+
+**Why this happens**: The `@luman-ui/core` package's dev script uses the `design-tokens` CLI command. This CLI is only available after the design-tokens package is built (it's in `dist/cli.mjs`). Without the Turbo dependency, core's dev script could start before design-tokens finishes building.

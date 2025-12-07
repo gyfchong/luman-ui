@@ -21,34 +21,34 @@
 export const buttonVariantClasses = {
   variant: {
         primary: [
-          'bg-button-primary-background-default',
-          'hover:bg-button-primary-background-hover',
-          'text-button-primary-text',
-          'border border-button-primary-border'
+          'bg-blue-600',
+          'hover:bg-blue-700',
+          'text-white',
+          'border border-transparent'
         ],
         secondary: [
-          'bg-button-secondary-background-default',
-          'hover:bg-button-secondary-background-hover',
-          'text-button-secondary-text',
-          'border border-button-secondary-border'
+          'bg-gray-100',
+          'hover:bg-gray-100',
+          'text-gray-900',
+          'border border-transparent'
         ],
         outline: [
-          'bg-button-outline-background-default',
-          'hover:bg-button-outline-background-hover',
-          'text-button-outline-text',
-          'border border-button-outline-border'
+          'bg-transparent',
+          'hover:bg-gray-50',
+          'text-gray-900',
+          'border border-gray-300'
         ],
         ghost: [
-          'bg-button-ghost-background-default',
-          'hover:bg-button-ghost-background-hover',
-          'text-button-ghost-text',
-          'border border-button-ghost-border'
+          'bg-transparent',
+          'hover:bg-gray-100',
+          'text-gray-900',
+          'border border-transparent'
         ],
         destructive: [
-          'bg-button-destructive-background-default',
-          'hover:bg-button-destructive-background-hover',
-          'text-button-destructive-text',
-          'border border-button-destructive-border'
+          'bg-red-600',
+          'hover:bg-red-700',
+          'text-white',
+          'border border-transparent'
         ]
   }
 } as const

@@ -9,7 +9,8 @@
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "postinstall": "pnpm --filter=@luman-ui/design-tokens build"
   },
   "devDependencies": {
     "oxlint": "^1.31.0",

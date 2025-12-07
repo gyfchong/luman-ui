@@ -21,10 +21,10 @@
 export const popoverVariantClasses = {
   variant: {
         default: [
-          'bg-popover-default-background-default',
-          'hover:bg-popover-default-background-hover',
-          'text-popover-default-text',
-          'border border-popover-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

@@ -21,10 +21,10 @@
 export const collapsibleVariantClasses = {
   variant: {
         default: [
-          'bg-collapsible-default-background-default',
-          'hover:bg-collapsible-default-background-hover',
-          'text-collapsible-default-text',
-          'border border-collapsible-default-border'
+          'bg-transparent',
+          'hover:bg-transparent',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

@@ -21,10 +21,10 @@
 export const tabsVariantClasses = {
   variant: {
         default: [
-          'bg-tabs-default-background-default',
-          'hover:bg-tabs-default-background-hover',
-          'text-tabs-default-text',
-          'border border-tabs-default-border'
+          'bg-transparent',
+          'hover:bg-gray-100',
+          'text-gray-900',
+          'border border-blue-600'
         ]
   }
 } as const

@@ -21,10 +21,10 @@
 export const scrollAreaVariantClasses = {
   variant: {
         default: [
-          'bg-scrollArea-default-background-default',
-          'hover:bg-scrollArea-default-background-hover',
-          'text-scrollArea-default-text',
-          'border border-scrollArea-default-border'
+          'bg-transparent',
+          'hover:bg-transparent',
+          'text-gray-900',
+          'border border-transparent'
         ]
   }
 } as const

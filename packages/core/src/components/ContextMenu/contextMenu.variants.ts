@@ -21,10 +21,10 @@
 export const contextMenuVariantClasses = {
   variant: {
         default: [
-          'bg-contextMenu-default-background-default',
-          'hover:bg-contextMenu-default-background-hover',
-          'text-contextMenu-default-text',
-          'border border-contextMenu-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

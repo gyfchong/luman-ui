@@ -21,10 +21,10 @@
 export const toolbarVariantClasses = {
   variant: {
         default: [
-          'bg-toolbar-default-background-default',
-          'hover:bg-toolbar-default-background-hover',
-          'text-toolbar-default-text',
-          'border border-toolbar-default-border'
+          'bg-gray-50',
+          'hover:bg-gray-50',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

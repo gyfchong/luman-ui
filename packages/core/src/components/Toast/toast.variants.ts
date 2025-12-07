@@ -21,22 +21,22 @@
 export const toastVariantClasses = {
   variant: {
         default: [
-          'bg-toast-default-background-default',
-          'hover:bg-toast-default-background-hover',
-          'text-toast-default-text',
-          'border border-toast-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-200'
         ],
         success: [
-          'bg-toast-success-background-default',
-          'hover:bg-toast-success-background-hover',
-          'text-toast-success-text',
-          'border border-toast-success-border'
+          'bg-green-50',
+          'hover:bg-green-50',
+          'text-green-700',
+          'border border-green-600'
         ],
         error: [
-          'bg-toast-error-background-default',
-          'hover:bg-toast-error-background-hover',
-          'text-toast-error-text',
-          'border border-toast-error-border'
+          'bg-red-50',
+          'hover:bg-red-50',
+          'text-red-700',
+          'border border-red-600'
         ]
   }
 } as const

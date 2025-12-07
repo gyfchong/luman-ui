@@ -21,10 +21,10 @@
 export const tooltipVariantClasses = {
   variant: {
         default: [
-          'bg-tooltip-default-background-default',
-          'hover:bg-tooltip-default-background-hover',
-          'text-tooltip-default-text',
-          'border border-tooltip-default-border'
+          'bg-gray-900',
+          'hover:bg-gray-900',
+          'text-white',
+          'border border-transparent'
         ]
   }
 } as const

@@ -4,7 +4,7 @@ export default defineConfig({
   entry: ["src/index.ts", "src/cli.ts"],
   format: ["esm"],
   dts: true,
-  clean: true,
+  clean: false,  // Don't clean to avoid race conditions with dependent packages
   external: [
     // CLI dependencies
     "citty",

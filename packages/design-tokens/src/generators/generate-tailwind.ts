@@ -10,9 +10,6 @@ export function generateTailwindConfig(tokens: DesignTokens): string {
 
   const lines: string[] = []
 
-  lines.push("@import 'tailwindcss';")
-  lines.push("")
-
   // Generate light mode (default)
   lines.push("/* Light mode (default) */")
   lines.push("@theme {")
@@ -61,13 +58,24 @@ function generateTokensForMode(
   function generateColorTokens(obj: any, prefix: string[]): void {
     for (const [key, value] of Object.entries(obj)) {
       // Skip metadata properties
-      if (key.startsWith('$')) continue
+      if (key.startsWith("$")) continue
 
-      if (value && typeof value === 'object') {
-        if ('$value' in value && '$type' in value) {
+      if (value && typeof value === "object") {
+        if ("$value" in value && "$type" in value) {
           // This is a leaf token
-          const tokenPath = [...prefix, key].join('-')
-          const resolvedValue = resolveTokenValue(value.$value, tokens, mode)
+          // Strip "primitive" and "semantic" from the path for Tailwind compatibility
+          const cleanPrefix = prefix.filter(
+            (p) => p !== "primitive" && p !== "semantic"
+          )
+          const tokenPath = [...cleanPrefix, key].join("-")
+
+          // Check for dark mode override
+          const valueToResolve =
+            mode === "dark" && value.$extensions?.mode?.dark
+              ? value.$extensions.mode.dark
+              : value.$value
+
+          const resolvedValue = resolveTokenValue(valueToResolve, tokens, mode)
           lines.push(`${indent}--color-${tokenPath}: ${resolvedValue};`)
         } else {
           // This is a nested object, recurse
@@ -105,62 +113,6 @@ function generateTokensForMode(
       lines.push(`${indent}--shadow-${key}: ${value};`)
     }
   }
-
-  // Generate component tokens as custom color utilities
-  for (const [componentName, componentConfig] of Object.entries(
-    tokens.component
-  )) {
-    // Skip metadata properties
-    if (componentName.startsWith('$')) continue
-
-    if ("variant" in componentConfig && componentConfig.variant) {
-      for (const [variantName, variantTokens] of Object.entries(
-        componentConfig.variant
-      )) {
-        for (const [property, propertyValue] of Object.entries(
-          variantTokens
-        )) {
-          // Skip metadata properties
-          if (property.startsWith('$')) continue
-
-          // Handle nested states (default, hover, etc.)
-          if (
-            typeof propertyValue === "object" &&
-            propertyValue !== null &&
-            !("$value" in propertyValue)
-          ) {
-            for (const [state, stateToken] of Object.entries(propertyValue)) {
-              // Skip metadata properties
-              if (state.startsWith('$')) continue
-
-              if (
-                typeof stateToken === "object" &&
-                stateToken !== null &&
-                "$value" in stateToken
-              ) {
-                const varName = `${componentName}-${variantName}-${property}-${state}`
-                const value = resolveTokenValue(
-                  stateToken.$value as string,
-                  tokens,
-                  mode
-                )
-                lines.push(`${indent}--color-${varName}: ${value};`)
-              }
-            }
-          } else if (typeof propertyValue === "object" && "$value" in propertyValue) {
-            // Simple property
-            const varName = `${componentName}-${variantName}-${property}`
-            const value = resolveTokenValue(
-              propertyValue.$value as string,
-              tokens,
-              mode
-            )
-            lines.push(`${indent}--color-${varName}: ${value};`)
-          }
-        }
-      }
-    }
-  }
 }
 
 /**
@@ -185,7 +137,11 @@ function resolveTokenValueInternal(
   visited: Set<string>
 ): string {
   // Check if it's a reference (e.g., "{color.brand.600}")
-  if (typeof value === "string" && value.startsWith("{") && value.endsWith("}")) {
+  if (
+    typeof value === "string" &&
+    value.startsWith("{") &&
+    value.endsWith("}")
+  ) {
     // Prevent infinite recursion
     if (visited.has(value)) {
       console.warn(`Circular reference detected: ${value}`)
@@ -201,7 +157,12 @@ function resolveTokenValueInternal(
       // If in dark mode and token has a dark mode override, use it
       if (mode === "dark" && token.$extensions?.mode?.dark) {
         // Recursively resolve the dark mode reference
-        return resolveTokenValueInternal(token.$extensions.mode.dark, tokens, mode, visited)
+        return resolveTokenValueInternal(
+          token.$extensions.mode.dark,
+          tokens,
+          mode,
+          visited
+        )
       }
 
       // Otherwise use the default $value
@@ -220,10 +181,7 @@ function resolveTokenValueInternal(
 /**
  * Get token by path
  */
-function getTokenByPath(
-  tokens: DesignTokens,
-  path: string[]
-): any | null {
+function getTokenByPath(tokens: DesignTokens, path: string[]): any | null {
   let current: any = tokens
 
   for (const segment of path) {

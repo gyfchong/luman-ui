@@ -21,10 +21,10 @@
 export const selectVariantClasses = {
   variant: {
         default: [
-          'bg-select-default-background-default',
-          'hover:bg-select-default-background-hover',
-          'text-select-default-text',
-          'border border-select-default-border'
+          'bg-white',
+          'hover:bg-gray-50',
+          'text-gray-900',
+          'border border-gray-300'
         ]
   }
 } as const

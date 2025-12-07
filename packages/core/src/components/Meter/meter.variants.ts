@@ -21,10 +21,10 @@
 export const meterVariantClasses = {
   variant: {
         default: [
-          'bg-meter-default-background-default',
-          'hover:bg-meter-default-background-hover',
-          'text-meter-default-text',
-          'border border-meter-default-border'
+          'bg-gray-200',
+          'hover:bg-gray-200',
+          'text-blue-600',
+          'border border-transparent'
         ]
   }
 } as const

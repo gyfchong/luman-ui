@@ -21,10 +21,10 @@
 export const fieldsetVariantClasses = {
   variant: {
         default: [
-          'bg-fieldset-default-background-default',
-          'hover:bg-fieldset-default-background-hover',
-          'text-fieldset-default-text',
-          'border border-fieldset-default-border'
+          'bg-transparent',
+          'hover:bg-transparent',
+          'text-gray-900',
+          'border border-gray-200'
         ]
   }
 } as const

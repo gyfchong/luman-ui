@@ -21,16 +21,16 @@
 export const toggleVariantClasses = {
   variant: {
         default: [
-          'bg-toggle-default-background-default',
-          'hover:bg-toggle-default-background-hover',
-          'text-toggle-default-text',
-          'border border-toggle-default-border'
+          'bg-transparent',
+          'hover:bg-gray-100',
+          'text-gray-900',
+          'border border-gray-300'
         ],
         primary: [
-          'bg-toggle-primary-background-default',
-          'hover:bg-toggle-primary-background-hover',
-          'text-toggle-primary-text',
-          'border border-toggle-primary-border'
+          'bg-blue-100',
+          'hover:bg-gray-100',
+          'text-blue-700',
+          'border border-blue-100'
         ]
   }
 } as const

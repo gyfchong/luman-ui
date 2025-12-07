@@ -21,16 +21,16 @@
 export const inputVariantClasses = {
   variant: {
         default: [
-          'bg-input-default-background-default',
-          'hover:bg-input-default-background-hover',
-          'text-input-default-text',
-          'border border-input-default-border'
+          'bg-white',
+          'hover:bg-white',
+          'text-gray-900',
+          'border border-gray-300'
         ],
         error: [
-          'bg-input-error-background-default',
-          'hover:bg-input-error-background-hover',
-          'text-input-error-text',
-          'border border-input-error-border'
+          'bg-red-50',
+          'hover:bg-red-50',
+          'text-gray-900',
+          'border border-red-600'
         ]
   }
 } as const
